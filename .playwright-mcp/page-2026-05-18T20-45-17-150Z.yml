@@ -1,0 +1,48 @@
+- generic [ref=e21]:
+  - complementary [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e24]: S
+      - generic [ref=e25]: sefaRoute
+    - navigation [ref=e26]:
+      - button "Dashboard" [ref=e27]:
+        - img [ref=e28]
+        - text: Dashboard
+      - button "Playground" [ref=e33]:
+        - img [ref=e34]
+        - text: Playground
+      - button "Keys" [ref=e36]:
+        - img [ref=e37]
+        - text: Keys
+      - button "Analytics" [ref=e41]:
+        - img [ref=e42]
+        - text: Analytics
+    - paragraph [ref=e45]: sefaRoute Admin
+  - generic [ref=e46]:
+    - banner [ref=e47]:
+      - heading "sefaRoute" [level=1] [ref=e49]
+      - button "qa_final" [active] [ref=e50]:
+        - img [ref=e51]
+        - generic [ref=e54]: qa_final
+        - img [ref=e55]
+    - main [ref=e57]:
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - heading "Profile" [level=1] [ref=e61]
+          - paragraph [ref=e62]: Manage your account settings
+        - generic [ref=e63]:
+          - generic [ref=e65]: Account Info
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - text: Username
+              - textbox [ref=e70]: qa_final
+            - generic [ref=e71]:
+              - text: Email
+              - textbox [ref=e73]: qa-final@example.com
+            - generic [ref=e74]:
+              - generic [ref=e75]: New Password (leave blank to keep current)
+              - textbox "Enter new password" [ref=e77]
+            - generic [ref=e78]:
+              - button "Save Changes" [ref=e79]:
+                - img
+                - text: Save Changes
+              - button "Logout" [ref=e80]

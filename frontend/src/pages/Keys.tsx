@@ -30,7 +30,12 @@ import {
   SelectValue,
 } from "@/components/ui/Select"
 import { Card, CardContent } from "@/components/ui/Card"
-import { Key, Plus, Copy, Check, Trash2, AlertCircle, Loader2 } from "lucide-react"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
+import { useToast } from "@/components/ui/Toast"
+import { SkeletonTable } from "@/components/ui/Skeleton"
+import { EmptyState } from "@/components/ui/EmptyState"
+import { ErrorState } from "@/components/ui/ErrorState"
+import { Key, Plus, Copy, Check, Trash2, Loader2 } from "lucide-react"
 
 const DEFAULT_NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
@@ -60,6 +65,8 @@ export default function Keys() {
   const [createdKey, setCreatedKey] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [revoking, setRevoking] = useState<string | null>(null)
+  const { addToast } = useToast()
+  const [revokeConfirmKey, setRevokeConfirmKey] = useState<VirtualKey | null>(null)
 
   const [nvidiaApiKey, setNvidiaApiKey] = useState("")
   const [nvidiaBaseUrl, setNvidiaBaseUrl] = useState(DEFAULT_NVIDIA_BASE_URL)
@@ -136,6 +143,7 @@ export default function Keys() {
     try {
       const result = await createKey(form)
       setCreatedKey(result.key)
+      addToast({ title: "API key created", variant: "success" })
 
       // Store key locally for Chat playground usage
       try {
@@ -153,23 +161,31 @@ export default function Keys() {
     }
   }
 
-  async function handleRevoke(keyId: string) {
-    if (!window.confirm("Revoke this API key? This action cannot be undone.")) return
+  function handleRevoke(key: VirtualKey) {
+    setRevokeConfirmKey(key)
+  }
+
+  async function handleConfirmRevoke() {
+    if (!revokeConfirmKey) return
+    const keyId = revokeConfirmKey.key_id
     setRevoking(keyId)
     try {
       await revokeKey(keyId)
       fetchKeys()
+      addToast({ title: "Key revoked", description: `"${revokeConfirmKey.name}" has been revoked.`, variant: "success" })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to revoke key"
-      alert(msg)
+      addToast({ title: "Error", description: msg, variant: "error" })
     } finally {
       setRevoking(null)
+      setRevokeConfirmKey(null)
     }
   }
 
   function handleCopy(key: string) {
     navigator.clipboard.writeText(key)
     setCopied(true)
+    addToast({ title: "API key copied to clipboard", variant: "info" })
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -190,42 +206,32 @@ export default function Keys() {
 
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
-        <div className="flex items-center justify-between">
-          <div className="h-8 w-32 rounded bg-brand-surface" />
-          <div className="h-10 w-28 rounded bg-brand-surface" />
+      <div className="animate-fade-in">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="h-8 w-32 rounded bg-brand-surface" />
+            <div className="h-10 w-28 rounded bg-brand-surface" />
+          </div>
+          <SkeletonTable rows={5} />
         </div>
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-6 rounded bg-brand-surface" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 rounded-full bg-red-50 p-3">
-          <AlertCircle className="h-6 w-6 text-red-500" />
-        </div>
-        <h3 className="font-heading text-base font-semibold text-brand-text">
-          Failed to load keys
-        </h3>
-        <p className="mt-1 text-sm text-brand-muted font-body">{error}</p>
-        <Button variant="outline" className="mt-4" onClick={fetchKeys}>
-          Try again
-        </Button>
+      <div className="animate-fade-in">
+        <ErrorState
+          title="Failed to load keys"
+          message={error}
+          onRetry={fetchKeys}
+        />
       </div>
     )
   }
 
   return (
+    <div className="animate-fade-in">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -447,17 +453,12 @@ export default function Keys() {
       </div>
 
       {keys.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-4 rounded-full bg-brand-surface p-3">
-            <Key className="h-6 w-6 text-brand-muted" />
-          </div>
-          <h3 className="font-heading text-base font-semibold text-brand-text">
-            No keys yet
-          </h3>
-          <p className="mt-1 text-sm text-brand-muted font-body">
-            Create your first virtual key to start routing requests.
-          </p>
-        </div>
+        <EmptyState
+          icon={Key}
+          title="No API keys yet"
+          description="Create your first API key to get started"
+          action={{ label: "Create Key", onClick: () => setDialogOpen(true) }}
+        />
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -507,7 +508,7 @@ export default function Keys() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRevoke(k.key_id)}
+                          onClick={() => handleRevoke(k)}
                           disabled={revoking === k.key_id}
                           className="text-red-500 hover:text-red-600 hover:bg-red-50"
                         >
@@ -522,6 +523,17 @@ export default function Keys() {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmationDialog
+        open={revokeConfirmKey !== null}
+        onOpenChange={(open) => { if (!open) setRevokeConfirmKey(null) }}
+        title="Revoke API Key"
+        description={`Are you sure you want to revoke "${revokeConfirmKey?.name ?? ""}"? This action cannot be undone.`}
+        confirmLabel="Revoke"
+        variant="danger"
+        onConfirm={handleConfirmRevoke}
+      />
+    </div>
     </div>
   )
 }

@@ -69,25 +69,30 @@ export default function Profile() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-orange" />
+      <div className="animate-fade-in">
+        <div className="flex h-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-orange" />
+        </div>
       </div>
     )
   }
 
   if (!profile) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <User className="mb-4 h-12 w-12 text-brand-mid" />
-        <p className="text-sm text-brand-mid font-body">{error || "Could not load profile."}</p>
+      <div className="animate-fade-in">
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <User className="mb-4 h-12 w-12 text-brand-mid" />
+          <p className="text-sm text-brand-mid font-body">{error || "Could not load profile."}</p>
+        </div>
       </div>
     )
   }
 
   return (
+    <div className="animate-fade-in">
     <div className="mx-auto max-w-lg space-y-6">
       <div>
-        <h1 className="font-heading text-2xl font-bold text-brand-dark">Profile</h1>
+        <h1 className="font-heading text-xl font-semibold text-brand-dark">Profile</h1>
         <p className="text-sm text-brand-mid font-body">Manage your account settings</p>
       </div>
 
@@ -98,20 +103,20 @@ export default function Profile() {
         <CardContent>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs font-heading font-medium uppercase tracking-wider text-brand-mid">
+              <label className="font-body text-xs text-brand-muted">
                 Username
               </label>
               <Input value={username} onChange={(e) => setUsername(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-heading font-medium uppercase tracking-wider text-brand-mid">
+              <label className="font-body text-xs text-brand-muted">
                 Email
               </label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-heading font-medium uppercase tracking-wider text-brand-mid">
-                New Password <span className="font-normal normal-case text-brand-mid/60">(leave blank to keep current)</span>
+              <label className="font-body text-xs text-brand-muted">
+                New Password <span className="font-normal normal-case text-brand-muted/60">(leave blank to keep current)</span>
               </label>
               <Input
                 type="password"
@@ -149,6 +154,7 @@ export default function Profile() {
           </form>
         </CardContent>
       </Card>
+    </div>
     </div>
   )
 }

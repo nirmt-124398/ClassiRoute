@@ -98,10 +98,10 @@ export default function Layout() {
                   setSidebarOpen(false)
                 }}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-heading font-medium transition-colors",
+                  "flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-heading font-medium transition-all duration-150 ease-out border-r-2",
                   isActive
-                    ? "bg-brand-orange/10 text-brand-orange"
-                    : "text-brand-muted hover:bg-brand-border hover:text-brand-text",
+                    ? "border-brand-orange bg-brand-orange/10 text-brand-orange"
+                    : "border-transparent text-brand-muted hover:bg-brand-border hover:text-brand-text",
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -137,7 +137,7 @@ export default function Layout() {
 
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm font-body text-brand-text hover:bg-brand-border transition-colors">
+              <button className="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm font-body text-brand-text transition-all duration-150 ease-out hover:bg-brand-border">
                 <User className="h-4 w-4 text-brand-muted" />
                 <span className="hidden sm:inline">{user.username}</span>
                 <ChevronDown className="h-3 w-3 text-brand-muted" />
@@ -152,14 +152,14 @@ export default function Layout() {
               >
                 <DropdownMenu.Item
                   onSelect={() => navigate("/")}
-                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm font-body text-brand-text outline-none hover:bg-brand-surface"
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm font-body text-brand-text outline-none transition-all duration-150 ease-out hover:bg-brand-surface"
                 >
                   <LayoutDashboard className="mr-2 h-4 w-4 text-brand-muted" />
                   Dashboard
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
                   onSelect={() => navigate("/profile")}
-                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm font-body text-brand-text outline-none hover:bg-brand-surface"
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm font-body text-brand-text outline-none transition-all duration-150 ease-out hover:bg-brand-surface"
                 >
                   <User className="mr-2 h-4 w-4 text-brand-muted" />
                   Profile
@@ -167,7 +167,7 @@ export default function Layout() {
                 <DropdownMenu.Separator className="my-1 h-px bg-brand-border" />
                 <DropdownMenu.Item
                   onSelect={logout}
-                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm font-body text-red-400 outline-none hover:bg-red-950/40"
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm font-body text-red-400 outline-none transition-all duration-150 ease-out hover:bg-red-950/40"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out

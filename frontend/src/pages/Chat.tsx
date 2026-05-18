@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { listKeys, type VirtualKey } from "@/api/keys"
 import { streamChatMessage, type ChatMessage, type ChatChunk, type FallbackNotice } from "@/api/chat"
@@ -7,6 +7,7 @@ interface ChatMessageDisplay extends ChatMessage {
   tierLabel?: string
   modelName?: string
   fallbackReason?: string
+  timestamp?: number
 }
 import { ApiError } from "@/api/client"
 import { useAuth } from "@/context/AuthContext"
@@ -15,9 +16,29 @@ import ReactMarkdown from "react-markdown"
 import rehypeHighlight from "rehype-highlight"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
-import { Card, CardContent } from "@/components/ui/Card"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select"
-import { Send, Loader2, Bot, User, Sparkles, Zap, Cpu, KeyRound, Trash2, Copy, Check } from "lucide-react"
+import { ChatInput } from "@/components/ui/ChatInput"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
+import { EmptyState } from "@/components/ui/EmptyState"
+import { SkeletonCard } from "@/components/ui/Skeleton"
+import { Badge } from "@/components/ui/Badge"
+import { useToast } from "@/components/ui/Toast"
+import { cn } from "@/lib/utils"
+import {
+  Send,
+  Loader2,
+  Bot,
+  User,
+  Sparkles,
+  Zap,
+  Cpu,
+  KeyRound,
+  Trash2,
+  Copy,
+  Check,
+  ChevronDown,
+  MessageSquare,
+} from "lucide-react"
 
 const CHAT_STORAGE_KEY = "chat_messages"
 
@@ -47,6 +68,18 @@ function getStoredKey(keyId: string): string | null {
   }
 }
 
+function formatTime(ts: number): string {
+  return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+}
+
+// ─── Prose classes kept identical to preserve markdown rendering ──────────
+
+const assistantProse =
+  "font-body text-sm space-y-2 [&_p]:leading-relaxed [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-sm [&_code]:text-brand-text [&_pre]:mb-3 [&_pre]:mt-2 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-brand-surface [&_pre]:p-4 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:text-brand-text [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_h1]:mb-2 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_a]:text-brand-blue [&_a]:underline [&_a:hover]:text-brand-orange [&_blockquote]:border-l-4 [&_blockquote]:border-brand-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-brand-muted [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-brand-border [&_th]:px-3 [&_th]:py-1.5 [&_th]:bg-brand-surface [&_th]:text-left [&_td]:border [&_td]:border-brand-border [&_td]:px-3 [&_td]:py-1.5 [&_hr]:my-3 [&_hr]:border-brand-border [&_img]:max-w-full [&_img]:rounded"
+
+const userProse =
+  "font-body text-sm space-y-2 [&_p]:leading-relaxed [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-sm [&_code]:text-white [&_pre]:mb-3 [&_pre]:mt-2 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-gray-900 [&_pre]:p-4 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:text-gray-100 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_h1]:mb-2 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_a]:text-blue-200 [&_a]:underline [&_a:hover]:text-blue-100 [&_blockquote]:border-l-4 [&_blockquote]:border-white/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-white/80 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-white/30 [&_th]:px-3 [&_th]:py-1.5 [&_th]:bg-white/10 [&_th]:text-left [&_td]:border [&_td]:border-white/30 [&_td]:px-3 [&_td]:py-1.5 [&_hr]:my-3 [&_hr]:border-white/30 [&_img]:max-w-full [&_img]:rounded"
+
 export default function Chat() {
   const { loading: authLoading } = useAuth()
   const navigate = useNavigate()
@@ -60,10 +93,20 @@ export default function Chat() {
   const [lastRouting, setLastRouting] = useState<ChatChunk["x-llmrouter"]>(undefined)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [fallbackNotice, setFallbackNotice] = useState<FallbackNotice | null>(null)
+  const [clearDialogOpen, setClearDialogOpen] = useState(false)
+  const [showScrollBtn, setShowScrollBtn] = useState(false)
+  const [expandedRoutingIndex, setExpandedRoutingIndex] = useState<number | null>(null)
+  const [lastRoutingExpanded, setLastRoutingExpanded] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const { addToast } = useToast()
+
+  // ─── Effects ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (authLoading) return
+    setInitialLoading(true)
     listKeys()
       .then((ks) => {
         const activeKeys = ks.filter(k => k.is_active)
@@ -75,6 +118,7 @@ export default function Chat() {
           navigate("/login", { replace: true })
         }
       })
+      .finally(() => setInitialLoading(false))
   }, [authLoading, navigate])
 
   useEffect(() => {
@@ -89,6 +133,8 @@ export default function Chat() {
       saveMessages(messages)
     }
   }, [messages])
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────
 
   function resolveKey(): string | null {
     if (manualKey.trim()) return manualKey.trim()
@@ -111,7 +157,7 @@ export default function Chat() {
       return
     }
 
-    const userMsg: ChatMessage = { role: "user", content: text }
+    const userMsg: ChatMessageDisplay = { role: "user", content: text, timestamp: Date.now() }
     setMessages((prev) => [...prev, userMsg])
     setInput("")
     setSending(true)
@@ -159,9 +205,23 @@ export default function Chat() {
             const updated = [...prev]
             const last = updated[updated.length - 1]
             if (last && last.role === "assistant") {
-              updated[updated.length - 1] = { role: "assistant", content, tierLabel: currentTierLabel, modelName: currentModelName, fallbackReason: currentFallbackReason }
+              updated[updated.length - 1] = {
+                ...last,
+                role: "assistant",
+                content,
+                tierLabel: currentTierLabel,
+                modelName: currentModelName,
+                fallbackReason: currentFallbackReason,
+              }
             } else {
-              updated.push({ role: "assistant", content, tierLabel: currentTierLabel, modelName: currentModelName, fallbackReason: currentFallbackReason })
+              updated.push({
+                role: "assistant",
+                content,
+                tierLabel: currentTierLabel,
+                modelName: currentModelName,
+                fallbackReason: currentFallbackReason,
+                timestamp: Date.now(),
+              })
             }
             return updated
           })
@@ -206,10 +266,38 @@ export default function Chat() {
     }
   }
 
+  function handleClear() {
+    setMessages([])
+    localStorage.removeItem(CHAT_STORAGE_KEY)
+    addToast({ title: "Conversation cleared", variant: "info" })
+  }
+
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    const threshold = 120
+    const isNearBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight < threshold
+    setShowScrollBtn(!isNearBottom)
+  }, [])
+
+  // ─── Loading / No-keys states ────────────────────────────────────────────
+
   if (authLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-brand-orange" />
+      </div>
+    )
+  }
+
+  if (initialLoading) {
+    return (
+      <div className="flex h-full items-center justify-center p-8">
+        <div className="w-full max-w-2xl space-y-4">
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
     )
   }
@@ -229,247 +317,321 @@ export default function Chat() {
     )
   }
 
+  // ─── Main UI ─────────────────────────────────────────────────────────────
+
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-brand-text">Playground</h1>
-          <p className="text-sm text-brand-muted font-body">
-            Send prompts to test the intelligent routing engine
-          </p>
+    <div className="flex h-full flex-col">
+      <ConfirmationDialog
+        open={clearDialogOpen}
+        onOpenChange={setClearDialogOpen}
+        title="Clear conversation"
+        description="This will permanently delete all messages in this conversation. This action cannot be undone."
+        confirmLabel="Clear"
+        cancelLabel="Cancel"
+        onConfirm={handleClear}
+        variant="default"
+      />
+
+      {/* ZONE 1: Header — key picker + clear button */}
+      <div className="shrink-0 border-b border-brand-border px-6 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <Select value={selectedKey} onValueChange={setSelectedKey}>
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder="Select a key" />
+              </SelectTrigger>
+              <SelectContent>
+                {keys.map((k) => (
+                  <SelectItem key={k.key_id} value={k.key_id}>
+                    {k.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!manualKey.trim() && !getStoredKey(selectedKey) && (
+              <span className="shrink-0 text-xs text-brand-muted font-body">
+                (key not available — paste below)
+              </span>
+            )}
+          </div>
+          {messages.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setClearDialogOpen(true)}
+              className="shrink-0 text-brand-muted hover:text-red-400"
+            >
+              <Trash2 className="mr-1.5 h-4 w-4" />
+              Clear Chat
+            </Button>
+          )}
         </div>
-        {messages.length > 0 && (
+
+        {!hasKey() && (
+          <div className="mt-3 flex items-center gap-2">
+            <KeyRound className="h-4 w-4 shrink-0 text-brand-muted" />
+            <Input
+              placeholder="Paste virtual key (lmr-...)"
+              value={manualKey}
+              onChange={(e) => setManualKey(e.target.value)}
+              className="font-mono text-sm flex-1"
+            />
+          </div>
+        )}
+
+        {fallbackNotice && (
+          <div className="mt-3 flex items-center justify-between rounded-sm border border-brand-border bg-brand-surface px-4 py-2.5">
+            <span className="text-sm font-body text-brand-muted">
+              ⚡ Routed to {fallbackNotice.to_model} ({fallbackNotice.reason})
+            </span>
+            <button
+              type="button"
+              onClick={() => setFallbackNotice(null)}
+              className="text-brand-muted hover:text-brand-text transition-colors"
+              title="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ZONE 2: Messages — scrollable */}
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="relative flex-1 overflow-y-auto"
+      >
+        <div className="px-6 py-4">
+          {messages.length === 0 ? (
+            <div className="flex h-full min-h-[400px] items-center justify-center">
+              <EmptyState
+                icon={MessageSquare}
+                title="Start a conversation"
+                description="Select a key above and send a prompt to test the intelligent routing engine."
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((msg, i) => {
+                const isAssistant = msg.role === "assistant"
+                const isSameAsPrev = i > 0 && messages[i - 1].role === msg.role
+                const isRoutingExpanded = expandedRoutingIndex === i
+
+                return (
+                  <div
+                    key={`msg-${msg.role}-${i}`}
+                    className={cn(
+                      "flex w-full animate-fade-in-up",
+                      isAssistant ? "justify-start" : "justify-end",
+                      isSameAsPrev ? "-mt-3" : "",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "flex max-w-[80%] flex-col",
+                        isAssistant ? "items-start" : "items-end",
+                      )}
+                    >
+                      {/* Routing badge — compact, collapsible */}
+                      {isAssistant && msg.tierLabel && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedRoutingIndex(isRoutingExpanded ? null : i)
+                          }
+                          className="mb-1.5"
+                        >
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer text-[10px] uppercase tracking-wider hover:bg-brand-border/50"
+                          >
+                            {msg.tierLabel === "weak" ? (
+                              <Zap className="mr-1 h-3 w-3" />
+                            ) : msg.tierLabel === "mid" ? (
+                              <Cpu className="mr-1 h-3 w-3" />
+                            ) : (
+                              <Sparkles className="mr-1 h-3 w-3" />
+                            )}
+                            {msg.tierLabel}
+                            {msg.modelName && (
+                              <span className="ml-1 font-mono normal-case">
+                                · {msg.modelName}
+                              </span>
+                            )}
+                          </Badge>
+                        </button>
+                      )}
+
+                      {/* Expanded routing details */}
+                      {isRoutingExpanded && msg.fallbackReason && (
+                        <div className="mb-2 rounded-sm border border-brand-border bg-brand-bg px-2.5 py-1.5 text-xs text-brand-muted">
+                          Fallback: {msg.fallbackReason}
+                        </div>
+                      )}
+
+                      {/* Message bubble */}
+                      <div
+                        className={cn(
+                          "w-full rounded-sm px-4 py-3",
+                          isAssistant
+                            ? "border-l-2 border-brand-orange/40 bg-brand-surface"
+                            : "border border-brand-border/80 bg-brand-surface",
+                        )}
+                      >
+                        <div className={isAssistant ? assistantProse : userProse}>
+                          <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+
+                      {/* Timestamp + Copy */}
+                      <div className="mt-1 flex items-center gap-3">
+                        {msg.timestamp && (
+                          <span className="text-[10px] text-brand-muted/50">
+                            {formatTime(msg.timestamp)}
+                          </span>
+                        )}
+                        {isAssistant && (
+                          <button
+                            type="button"
+                            onClick={() => copyMessage(msg.content, i)}
+                            className="flex items-center gap-1 text-[10px] text-brand-muted/50 hover:text-brand-text transition-colors"
+                            title="Copy message"
+                          >
+                            {copiedIndex === i ? (
+                              <>
+                                <Check className="h-3 w-3 text-brand-green" />
+                                <span className="text-brand-green">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Streaming indicator */}
+          {sending && (
+            <div className="mt-4 flex items-start gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-border">
+                <Bot className="h-4 w-4 text-white" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <span className="h-2 w-2 rounded-full bg-brand-orange/60 animate-typing-dot" />
+                    <span
+                      className="h-2 w-2 rounded-full bg-brand-orange/60 animate-typing-dot"
+                      style={{ animationDelay: "0.2s" }}
+                    />
+                    <span
+                      className="h-2 w-2 rounded-full bg-brand-orange/60 animate-typing-dot"
+                      style={{ animationDelay: "0.4s" }}
+                    />
+                  </div>
+                  {lastRouting?.tier_name && (
+                    <span className="text-xs text-brand-muted font-mono">
+                      {lastRouting.tier_name} model responding...
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="mt-4 rounded-sm border border-red-800 bg-red-950/20 px-4 py-3 text-sm text-red-400">
+              {error}
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Scroll-to-bottom button */}
+        {showScrollBtn && (
           <button
-            onClick={() => {
-              setMessages([])
-              localStorage.removeItem(CHAT_STORAGE_KEY)
-            }}
-            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-brand-muted hover:text-red-400 hover:bg-red-950/40 transition-colors font-body"
-            title="Clear chat"
+            type="button"
+            onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })}
+            className="absolute bottom-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-brand-orange text-white shadow-lg hover:bg-brand-orange/90 transition-colors animate-fade-in-up"
+            title="Scroll to bottom"
           >
-            <Trash2 className="h-4 w-4" />
-            Clear Chat
+            <ChevronDown className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      {fallbackNotice && (
-        <div className="flex items-center justify-between rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2.5">
-          <span className="text-sm font-medium text-yellow-800">
-            ⚡ Routed to {fallbackNotice.to_model} ({fallbackNotice.reason})
-          </span>
-          <button
-            type="button"
-            onClick={() => setFallbackNotice(null)}
-            className="text-yellow-600 hover:text-yellow-800 transition-colors"
-            title="Dismiss"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      <Card className="flex-1 overflow-hidden">
-        <CardContent className="flex h-full flex-col p-0">
-          <div className="flex-1 overflow-y-auto space-y-4 p-4">
-            {messages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-center">
-                <Bot className="mb-4 h-16 w-16 text-brand-muted" />
-                <h3 className="font-heading text-lg font-semibold text-brand-text">
-                  Test Your Router
-                </h3>
-                <p className="mt-2 max-w-md text-sm text-brand-muted font-body">
-                  Select a key below (or paste one) and send a prompt to see which tier
-                  the router selects based on complexity analysis.
-                </p>
-              </div>
-            ) : (
-              messages.map((msg, i) => (
-                <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                  <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                      msg.role === "user" ? "bg-brand-orange" : "bg-brand-border"
-                    }`}
-                  >
-                    {msg.role === "user"
-                      ? <User className="h-4 w-4 text-white" />
-                      : <Bot className="h-4 w-4 text-white" />
-                    }
-                  </div>
-                  <div
-                    className={`group flex max-w-[70%] flex-col gap-1 ${
-                      msg.role === "user"
-                        ? "items-end"
-                        : "items-start"
-                    }`}
-                  >
-                    <div
-                      className={`w-full rounded-lg px-4 py-2 ${
-                        msg.role === "user"
-                          ? "bg-brand-orange text-white"
-                          : "bg-brand-bg text-brand-text"
-                      }`}
-                    >
-                      {msg.role === "assistant" && msg.tierLabel && (
-                        <div className="mb-1.5 flex flex-col gap-1">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider font-heading ${
-                                msg.tierLabel === "weak"
-                                  ? "bg-green-100 text-green-700"
-                                  : msg.tierLabel === "mid"
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : "bg-red-100 text-red-700"
-                              }`}
-                            >
-                              {msg.tierLabel}
-                            </span>
-                            {msg.modelName && (
-                              <span className="text-[11px] text-brand-muted font-mono truncate max-w-[200px]">
-                                {msg.modelName}
-                              </span>
-                            )}
-                          </div>
-                          {msg.fallbackReason && (
-                            <span className="text-[10px] text-amber-600 italic">
-                              Fallback: {msg.fallbackReason}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      <div
-                        className={
-                          msg.role === "user"
-                            ? "font-body text-sm space-y-2 [&_p]:leading-relaxed [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-sm [&_code]:text-white [&_pre]:mb-3 [&_pre]:mt-2 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-gray-900 [&_pre]:p-4 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:text-gray-100 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_h1]:mb-2 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_a]:text-blue-200 [&_a]:underline [&_a:hover]:text-blue-100 [&_blockquote]:border-l-4 [&_blockquote]:border-white/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-white/80 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-white/30 [&_th]:px-3 [&_th]:py-1.5 [&_th]:bg-white/10 [&_th]:text-left [&_td]:border [&_td]:border-white/30 [&_td]:px-3 [&_td]:py-1.5 [&_hr]:my-3 [&_hr]:border-white/30 [&_img]:max-w-full [&_img]:rounded"
-                            : "font-body text-sm space-y-2 [&_p]:leading-relaxed [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-sm [&_code]:text-brand-text [&_pre]:mb-3 [&_pre]:mt-2 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-brand-surface [&_pre]:p-4 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:text-brand-text [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_h1]:mb-2 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_a]:text-brand-blue [&_a]:underline [&_a:hover]:text-brand-orange [&_blockquote]:border-l-4 [&_blockquote]:border-brand-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-brand-muted [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-brand-border [&_th]:px-3 [&_th]:py-1.5 [&_th]:bg-brand-surface [&_th]:text-left [&_td]:border [&_td]:border-brand-border [&_td]:px-3 [&_td]:py-1.5 [&_hr]:my-3 [&_hr]:border-brand-border [&_img]:max-w-full [&_img]:rounded"
-                        }
-                      >
-                        <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-                          {msg.content}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-                    {msg.role === "assistant" && (
-                      <button
-                        onClick={() => copyMessage(msg.content, i)}
-                        className="ml-1 flex items-center gap-1 text-xs text-brand-muted hover:text-brand-text transition-colors"
-                        title="Copy message"
-                      >
-                        {copiedIndex === i ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-green-500" />
-                            <span className="text-green-500">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-            {sending && (
-              <div className="flex gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-border">
-                  <Bot className="h-4 w-4 text-white" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-brand-muted" />
-                  <span className="text-sm text-brand-muted font-body">Thinking...</span>
-                </div>
-              </div>
-            )}
-            {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
-            <div ref={messagesEndRef} />
+      {/* ZONE 3: Input — fixed bottom */}
+      <div className="shrink-0 border-t border-brand-border px-6 py-4">
+        <div className="flex items-end gap-3">
+          <div className="flex-1">
+            <ChatInput
+              placeholder="Enter a prompt..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onSend={handleSend}
+              disabled={sending || !hasKey()}
+            />
           </div>
+          {lastRouting && (
+            <button
+              type="button"
+              onClick={() => setLastRoutingExpanded(!lastRoutingExpanded)}
+              className="mb-1"
+              title="Routing details"
+            >
+              <Badge
+                variant="outline"
+                className="cursor-pointer text-[10px] uppercase tracking-wider hover:bg-brand-border/50"
+              >
+                {lastRouting.tier === 0 ? (
+                  <Zap className="mr-1 h-3 w-3" />
+                ) : lastRouting.tier === 1 ? (
+                  <Cpu className="mr-1 h-3 w-3" />
+                ) : (
+                  <Sparkles className="mr-1 h-3 w-3" />
+                )}
+                {lastRouting.tier_name}
+              </Badge>
+            </button>
+          )}
+        </div>
 
-          <div className="border-t border-brand-border space-y-3 p-5">
-            <div className="flex items-center gap-3">
-              <Select value={selectedKey} onValueChange={setSelectedKey}>
-                <SelectTrigger className="w-64 sm:w-72">
-                  <SelectValue placeholder="Select a key" />
-                </SelectTrigger>
-                <SelectContent>
-                  {keys.map((k) => (
-                    <SelectItem key={k.key_id} value={k.key_id}>
-                      {k.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {!manualKey.trim() && !getStoredKey(selectedKey) && (
-                <span className="text-xs text-brand-muted font-body">
-                  (key not available — paste below)
-                </span>
+        {lastRoutingExpanded && lastRouting && (
+          <div className="mt-2 space-y-1 rounded-sm border border-brand-border bg-brand-surface p-2.5 text-xs text-brand-muted">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>Tier: {lastRouting.tier_name}</span>
+              <span>· Confidence: {(lastRouting.confidence * 100).toFixed(0)}%</span>
+              <span>· Difficulty: {(lastRouting.difficulty_score * 100).toFixed(0)}%</span>
+              {lastRouting.upgraded && (
+                <Badge variant="success" className="text-[9px]">
+                  Upgraded
+                </Badge>
+              )}
+              {lastRouting.rerouted && (
+                <Badge variant="destructive" className="text-[9px]">
+                  Rerouted
+                </Badge>
               )}
             </div>
-
-            {!hasKey() && (
-              <div className="flex items-center gap-2">
-                <KeyRound className="h-4 w-4 shrink-0 text-brand-muted" />
-                <Input
-                  placeholder="Paste virtual key (lmr-...)"
-                  value={manualKey}
-                  onChange={(e) => setManualKey(e.target.value)}
-                  className="font-mono text-sm flex-1"
-                />
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder="Enter a prompt..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSend()
-                  }
-                }}
-                disabled={sending}
-                className="flex-1 text-base py-3 h-auto min-h-[56px]"
-              />
-              <Button onClick={handleSend} disabled={sending || !input.trim() || !hasKey()}>
-                {sending
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Send className="h-4 w-4" />
-                }
-              </Button>
-            </div>
-
-            {lastRouting && (
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-brand-muted font-body">Routed to:</span>
-                <span
-                  className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-white capitalize ${
-                    lastRouting.tier === 0 ? "bg-yellow-500"
-                    : lastRouting.tier === 1 ? "bg-blue-500"
-                    : "bg-purple-500"
-                  }`}
-                >
-                  {lastRouting.tier === 0 ? <Zap className="h-3 w-3" />
-                    : lastRouting.tier === 1 ? <Cpu className="h-3 w-3" />
-                    : <Sparkles className="h-3 w-3" />
-                  }
-                  {lastRouting.tier_name}
-                </span>
-                <span className="text-brand-muted font-body">
-                  ({(lastRouting.confidence * 100).toFixed(0)}% confidence)
-                </span>
-              </div>
+            {lastRouting.fallback_reason && (
+              <div className="pt-0.5">Fallback: {lastRouting.fallback_reason}</div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     </div>
   )
 }

@@ -30,6 +30,14 @@ import {
 } from "@/components/ui/Select"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs"
 import {
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  CartesianGrid, BarChart, Bar,
+  type TooltipValueType,
+} from "recharts"
+import { SkeletonTable, SkeletonStat } from "@/components/ui/Skeleton"
+import { EmptyState } from "@/components/ui/EmptyState"
+import { ErrorState } from "@/components/ui/ErrorState"
+import {
   Activity,
   DollarSign,
   Gauge,
@@ -38,6 +46,8 @@ import {
   AlertCircle,
   RefreshCw,
   ArrowUpRight,
+  BarChart3,
+  Database,
 } from "lucide-react"
 
 function statColor(value: number): string {
@@ -75,7 +85,7 @@ function SummaryCards({ summary }: { summary: Summary }) {
   ]
 
   return (
-    <>
+    <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon
@@ -136,13 +146,13 @@ function SummaryCards({ summary }: { summary: Summary }) {
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4 border-t border-brand-border pt-4 text-sm">
             <div>
-              <span className="font-heading text-brand-muted">Total Cost</span>
+              <span className="font-body text-xs text-brand-muted">Total Cost</span>
               <p className="font-heading font-semibold text-brand-text">
                 ${summary.total_cost_usd.toFixed(6)}
               </p>
             </div>
             <div>
-              <span className="font-heading text-brand-muted">Cost vs Strong</span>
+              <span className="font-body text-xs text-brand-muted">Cost vs Strong</span>
               <p className="flex items-center gap-1 font-heading font-semibold text-brand-green">
                 <ArrowUpRight className="h-3 w-3" />
                 ${summary.cost_saved_vs_always_strong.toFixed(4)} saved
@@ -151,7 +161,106 @@ function SummaryCards({ summary }: { summary: Summary }) {
           </div>
         </CardContent>
       </Card>
-    </>
+    </div>
+  )
+}
+
+function latencyBuckets(requests: RequestLog[]) {
+  const thresholds = [0, 50, 100, 200, 500, 1000]
+  const labels = ["<50ms", "50-100", "100-200", "200-500", "500-1s", ">1s"]
+  const counts = new Array(thresholds.length).fill(0)
+  for (const r of requests) {
+    const ms = r.latency_ms
+    let idx = thresholds.length - 1
+    for (let i = 0; i < thresholds.length - 1; i++) {
+      if (ms >= thresholds[i] && ms < thresholds[i + 1]) {
+        idx = i
+        break
+      }
+    }
+    counts[idx]++
+  }
+  return labels.map((range, i) => ({ range, count: counts[i] }))
+}
+
+function DailyUsageChart({ data, metric }: { data: DailyStats[]; metric: "requests" | "cost" }) {
+  const lineColor = metric === "requests" ? "#6a9bcc" : "#788c5d"
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#2a2a28" />
+        <XAxis
+          dataKey="date"
+          stroke="#9c9a92"
+          fontSize={12}
+          tickFormatter={(v: string) => v.slice(5)}
+          tickLine={false}
+        />
+        <YAxis stroke="#9c9a92" fontSize={12} tickLine={false} axisLine={false} />
+        <Tooltip
+          contentStyle={{
+            background: "#1c1c1a",
+            border: "1px solid #2a2a28",
+            borderRadius: "8px",
+            color: "#ededed",
+            fontSize: "13px",
+          }}
+          labelStyle={{ color: "#ededed", fontWeight: 600, marginBottom: 4 }}
+          formatter={(value: TooltipValueType | undefined) => [
+            metric === "requests" ? Number(value ?? 0).toLocaleString() : `$${Number(value ?? 0).toFixed(4)}`,
+            metric === "requests" ? "Requests" : "Cost",
+          ]}
+        />
+        <Line
+          type="monotone"
+          dataKey={metric}
+          stroke={lineColor}
+          strokeWidth={2}
+          dot={{ r: 3, fill: lineColor, stroke: "none" }}
+          activeDot={{ r: 5, fill: lineColor, stroke: "#1c1c1a", strokeWidth: 2 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
+function LatencyHistogram({ requests }: { requests: RequestLog[] }) {
+  const buckets = latencyBuckets(requests)
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <BarChart3 className="h-4 w-4 text-brand-orange" />
+          Latency Distribution
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={buckets} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#2a2a28" vertical={false} />
+            <XAxis
+              dataKey="range"
+              stroke="#9c9a92"
+              fontSize={11}
+              tickLine={false}
+            />
+            <YAxis stroke="#9c9a92" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
+            <Tooltip
+              contentStyle={{
+                background: "#1c1c1a",
+                border: "1px solid #2a2a28",
+                borderRadius: "8px",
+                color: "#ededed",
+                fontSize: "13px",
+              }}
+              itemStyle={{ color: "#d97757" }}
+              formatter={(value: TooltipValueType | undefined) => [Number(value ?? 0).toLocaleString(), "Requests"]}
+            />
+            <Bar dataKey="count" fill="#d97757" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -169,6 +278,7 @@ export default function Analytics() {
   const [dailyError, setDailyError] = useState("")
   const [summaryError, setSummaryError] = useState("")
   const [requestsError, setRequestsError] = useState("")
+  const [chartMetric, setChartMetric] = useState<"requests" | "cost">("requests")
 
   useEffect(() => {
     listKeys()
@@ -236,6 +346,7 @@ export default function Analytics() {
   }, [authLoading, fetchSummary, fetchRequests, fetchDaily])
 
   return (
+    <div className="animate-fade-in">
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -298,7 +409,12 @@ export default function Analytics() {
               <p className="mt-1 text-sm text-brand-muted font-body">{summaryError}</p>
             </div>
           ) : summary ? (
-            <SummaryCards summary={summary} />
+            <div className="space-y-6">
+              <SummaryCards summary={summary} />
+              {!requestsLoading && requests.length > 0 && (
+                <LatencyHistogram requests={requests} />
+              )}
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="mb-4 rounded-full bg-brand-surface p-3">
@@ -316,49 +432,67 @@ export default function Analytics() {
 
         <TabsContent value="daily">
           {dailyLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="h-10 animate-pulse rounded bg-brand-surface" />
-              ))}
-            </div>
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  <SkeletonStat />
+                  <SkeletonStat />
+                </div>
+              </CardContent>
+            </Card>
           ) : dailyError ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="mb-4 rounded-full bg-red-50 p-3">
-                <AlertCircle className="h-6 w-6 text-red-500" />
-              </div>
-              <p className="text-sm text-brand-muted font-body">{dailyError}</p>
-            </div>
+            <ErrorState
+              message={dailyError}
+              onRetry={fetchDaily}
+            />
           ) : dailyStats.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Activity className="mb-4 h-8 w-8 text-brand-muted" />
-              <p className="text-sm text-brand-muted font-body">No daily data yet.</p>
-            </div>
+            <EmptyState
+              icon={BarChart3}
+              title="No daily data yet"
+              description="Start routing requests to see daily usage trends."
+            />
           ) : (
             <Card>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Requests</TableHead>
-                    <TableHead>Cost (USD)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dailyStats.map((row) => (
-                    <TableRow key={row.date}>
-                      <TableCell className="font-body text-brand-text">
-                        {row.date}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{row.requests.toLocaleString()}</Badge>
-                      </TableCell>
-                      <TableCell className="font-body tabular-nums text-brand-text">
-                        ${row.cost_usd.toFixed(6)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Activity className="h-4 w-4 text-brand-blue" />
+                    Daily Usage
+                  </CardTitle>
+                  <div className="flex items-center gap-1 rounded-lg border border-brand-border bg-brand-surface p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setChartMetric("requests")}
+                      className={`rounded-md px-3 py-1.5 text-xs font-heading font-medium transition-colors ${
+                        chartMetric === "requests"
+                          ? "bg-brand-orange text-white"
+                          : "text-brand-muted hover:text-brand-text"
+                      }`}
+                    >
+                      Requests
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChartMetric("cost")}
+                      className={`rounded-md px-3 py-1.5 text-xs font-heading font-medium transition-colors ${
+                        chartMetric === "cost"
+                          ? "bg-brand-orange text-white"
+                          : "text-brand-muted hover:text-brand-text"
+                      }`}
+                    >
+                      Cost
+                    </button>
+                  </div>
+                </div>
+                <CardDescription>
+                  {chartMetric === "requests"
+                    ? "Number of routing requests per day"
+                    : "Total cost in USD per day"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DailyUsageChart data={dailyStats} metric={chartMetric} />
+              </CardContent>
             </Card>
           )}
         </TabsContent>
@@ -367,104 +501,92 @@ export default function Analytics() {
           {requestsLoading ? (
             <Card>
               <CardContent className="p-6">
-                <div className="animate-pulse space-y-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="h-6 rounded bg-brand-surface" />
-                  ))}
-                </div>
+                <SkeletonTable rows={5} />
               </CardContent>
             </Card>
           ) : requestsError ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="mb-4 rounded-full bg-red-50 p-3">
-                <AlertCircle className="h-6 w-6 text-red-500" />
-              </div>
-              <h3 className="font-heading text-base font-semibold text-brand-text">
-                Failed to load
-              </h3>
-              <p className="mt-1 text-sm text-brand-muted font-body">{requestsError}</p>
-            </div>
+            <ErrorState
+              message={requestsError}
+              onRetry={fetchRequests}
+            />
           ) : requests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="mb-4 rounded-full bg-brand-surface p-3">
-                <Activity className="h-6 w-6 text-brand-muted" />
-              </div>
-              <h3 className="font-heading text-base font-semibold text-brand-text">
-                No request logs
-              </h3>
-              <p className="mt-1 text-sm text-brand-muted font-body">
-                No requests found for the selected filter.
-              </p>
-            </div>
+            <EmptyState
+              icon={Database}
+              title="No request logs"
+              description="No requests found for the selected filter."
+            />
           ) : (
             <Card>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Model</TableHead>
-                      <TableHead>Tier</TableHead>
-                      <TableHead>Confidence</TableHead>
-                      <TableHead>Latency</TableHead>
-                      <TableHead>Tokens</TableHead>
-                      <TableHead>Cost</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Prompt</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {requests.map((r) => (
-                      <TableRow key={r.id}>
-                        <TableCell className="text-brand-muted text-xs whitespace-nowrap">
-                          {new Date(r.created_at).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-xs font-mono max-w-[120px] truncate">
-                          {r.model_used}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="text-xs">
-                            {["Weak", "Mid", "Strong"][r.tier_assigned] ?? r.tier_assigned}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs tabular-nums">
-                          {(r.confidence * 100).toFixed(0)}%
-                        </TableCell>
-                        <TableCell className="text-xs tabular-nums">
-                          {r.latency_ms}ms
-                        </TableCell>
-                        <TableCell className="text-xs tabular-nums">
-                          {r.input_tokens != null ? `${r.input_tokens}→${r.output_tokens}` : "—"}
-                        </TableCell>
-                        <TableCell className="text-xs tabular-nums">
-                          {r.cost_estimate_usd != null
-                            ? `$${r.cost_estimate_usd.toFixed(6)}`
-                            : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              r.status === "success" ? "success"
-                              : r.status === "error" ? "destructive"
-                              : "outline"
-                            }
-                            className="text-xs"
-                          >
-                            {r.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate text-brand-muted text-xs">
-                          {r.prompt_preview ?? "—"}
-                        </TableCell>
+              <div className="max-h-[480px] overflow-auto">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="sticky top-0 z-10 bg-brand-surface">
+                      <TableRow>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Model</TableHead>
+                        <TableHead>Tier</TableHead>
+                        <TableHead>Confidence</TableHead>
+                        <TableHead>Latency</TableHead>
+                        <TableHead>Tokens</TableHead>
+                        <TableHead>Cost</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Prompt</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
+                    </TableHeader>
+                    <TableBody>
+                      {requests.map((r) => (
+                        <TableRow key={r.id} className="hover:bg-brand-surface/80">
+                          <TableCell className="text-brand-muted text-xs whitespace-nowrap">
+                            {new Date(r.created_at).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono max-w-[120px] truncate">
+                            {r.model_used}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="text-xs">
+                              {["Weak", "Mid", "Strong"][r.tier_assigned] ?? r.tier_assigned}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs tabular-nums">
+                            {(r.confidence * 100).toFixed(0)}%
+                          </TableCell>
+                          <TableCell className="text-xs tabular-nums">
+                            {r.latency_ms}ms
+                          </TableCell>
+                          <TableCell className="text-xs tabular-nums">
+                            {r.input_tokens != null ? `${r.input_tokens}→${r.output_tokens}` : "—"}
+                          </TableCell>
+                          <TableCell className="text-xs tabular-nums">
+                            {r.cost_estimate_usd != null
+                              ? `$${r.cost_estimate_usd.toFixed(6)}`
+                              : "—"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                r.status === "success" ? "success"
+                                : r.status === "error" ? "destructive"
+                                : "outline"
+                              }
+                              className="text-xs"
+                            >
+                              {r.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate text-brand-muted text-xs">
+                            {r.prompt_preview ?? "—"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </div>
             </Card>
           )}
         </TabsContent>
       </Tabs>
+    </div>
     </div>
   )
 }

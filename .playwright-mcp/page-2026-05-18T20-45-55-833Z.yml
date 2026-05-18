@@ -1,0 +1,46 @@
+- generic [ref=e21]:
+  - complementary [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e24]: S
+      - generic [ref=e25]: sefaRoute
+    - navigation [ref=e26]:
+      - button "Dashboard" [ref=e27]:
+        - img [ref=e28]
+        - text: Dashboard
+      - button "Playground" [ref=e33]:
+        - img [ref=e34]
+        - text: Playground
+      - button "Keys" [ref=e36]:
+        - img [ref=e37]
+        - text: Keys
+      - button "Analytics" [ref=e41]:
+        - img [ref=e42]
+        - text: Analytics
+    - paragraph [ref=e45]: sefaRoute Admin
+  - generic [ref=e46]:
+    - banner [ref=e47]:
+      - heading "Analytics" [level=1] [ref=e82]
+      - button "qa_final" [ref=e50]:
+        - img [ref=e51]
+        - generic [ref=e54]: qa_final
+        - img [ref=e55]
+    - main [ref=e57]:
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - paragraph [ref=e87]: Usage statistics and request logs
+          - generic [ref=e88]:
+            - combobox [ref=e89]:
+              - generic: All Keys
+              - img [ref=e90]
+            - button [ref=e92]:
+              - img
+        - generic [ref=e93]:
+          - tablist [ref=e94]:
+            - tab "Summary" [ref=e95]
+            - tab "Daily Usage" [active] [selected] [ref=e96]
+            - tab "Request Logs" [ref=e97]
+          - tabpanel "Daily Usage" [ref=e162]:
+            - generic [ref=e164]:
+              - img [ref=e165]
+              - heading "No daily data yet" [level=3] [ref=e167]
+              - paragraph [ref=e168]: Start routing requests to see daily usage trends.

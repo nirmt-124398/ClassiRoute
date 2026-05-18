@@ -1,0 +1,109 @@
+- generic:
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - generic: S
+          - generic: sefaRoute
+        - navigation:
+          - button:
+            - img
+            - text: Dashboard
+          - button:
+            - img
+            - text: Playground
+          - button:
+            - img
+            - text: Keys
+          - button:
+            - img
+            - text: Analytics
+        - generic:
+          - paragraph: sefaRoute Admin
+      - generic:
+        - banner:
+          - generic:
+            - heading [level=1]: Dashboard
+          - button [expanded]:
+            - img
+            - generic: qa_final
+            - img
+        - main:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - paragraph: Total Requests
+                    - paragraph: "0"
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - paragraph: Cost Saved
+                    - paragraph: $0.0000
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - paragraph: Avg Latency
+                    - paragraph: 0ms
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - paragraph: Success Rate
+                    - paragraph: 0.0%
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                    - text: Requests by Tier
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - application
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: Weak
+                          - generic: 0 (0.0%)
+                      - generic:
+                        - generic:
+                          - generic: Mid
+                          - generic: 0 (0.0%)
+                      - generic:
+                        - generic:
+                          - generic: Strong
+                          - generic: 0 (0.0%)
+                  - generic:
+                    - generic:
+                      - text: Total Cost
+                      - paragraph: $0.000000
+                    - generic:
+                      - text: Cost vs Strong
+                      - paragraph:
+                        - img
+                        - text: $0.0000 saved
+  - menu "qa_final" [active] [ref=e5]:
+    - menuitem "Dashboard" [ref=e6] [cursor=pointer]:
+      - img [ref=e7]
+      - text: Dashboard
+    - menuitem "Profile" [ref=e12] [cursor=pointer]:
+      - img [ref=e13]
+      - text: Profile
+    - separator [ref=e16]
+    - menuitem "Log out" [ref=e17] [cursor=pointer]:
+      - img [ref=e18]
+      - text: Log out
