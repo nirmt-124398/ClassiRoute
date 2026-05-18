@@ -36,7 +36,7 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-brand-light px-4">
+    <div className="flex min-h-screen items-center justify-center bg-brand-bg px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-brand-dark text-sm font-bold tracking-widest text-white font-heading">
@@ -48,7 +48,7 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="rounded-sm border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 font-body">
+              <div className="rounded-sm border border-red-800 bg-red-950/30 px-3 py-2 text-sm text-red-400 font-body">
                 {error}
               </div>
             )}
@@ -74,7 +74,7 @@ export default function Login() {
               {submitting ? "Signing in…" : "Sign in"}
             </Button>
           </form>
-          <p className="mt-6 text-center text-sm text-brand-mid font-body">
+          <p className="mt-6 text-center text-sm text-brand-muted font-body">
             Don&apos;t have an account?{" "}
             <Link
               to="/register"

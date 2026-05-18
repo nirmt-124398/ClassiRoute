@@ -83,7 +83,7 @@ function SummaryCards({ summary }: { summary: Summary }) {
             <Card key={stat.label}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-mid">
+                  <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
                     {stat.label}
                   </p>
                   <Icon className={`h-4 w-4 ${stat.color}`} />
@@ -120,29 +120,29 @@ function SummaryCards({ summary }: { summary: Summary }) {
                     {tier}
                   </Badge>
                   <div className="flex-1">
-                    <div className="h-2 rounded-full bg-brand-lightgray">
+                    <div className="h-2 rounded-full bg-brand-surface">
                       <div
                         className="h-2 rounded-full bg-brand-orange/70 transition-all"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-body text-brand-mid tabular-nums">
+                  <span className="text-sm font-body text-brand-muted tabular-nums">
                     {count.toLocaleString()} ({pct}%)
                   </span>
                 </div>
               )
             })}
           </div>
-          <div className="mt-6 grid grid-cols-2 gap-4 border-t border-brand-lightgray pt-4 text-sm">
+          <div className="mt-6 grid grid-cols-2 gap-4 border-t border-brand-border pt-4 text-sm">
             <div>
-              <span className="font-heading text-brand-mid">Total Cost</span>
-              <p className="font-heading font-semibold text-brand-dark">
+              <span className="font-heading text-brand-muted">Total Cost</span>
+              <p className="font-heading font-semibold text-brand-text">
                 ${summary.total_cost_usd.toFixed(6)}
               </p>
             </div>
             <div>
-              <span className="font-heading text-brand-mid">Cost vs Strong</span>
+              <span className="font-heading text-brand-muted">Cost vs Strong</span>
               <p className="flex items-center gap-1 font-heading font-semibold text-brand-green">
                 <ArrowUpRight className="h-3 w-3" />
                 ${summary.cost_saved_vs_always_strong.toFixed(4)} saved
@@ -239,7 +239,7 @@ export default function Analytics() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm text-brand-mid font-body">
+          <p className="text-sm text-brand-muted font-body">
             Usage statistics and request logs
           </p>
         </div>
@@ -280,8 +280,8 @@ export default function Analytics() {
                 {Array.from({ length: 4 }).map((_, i) => (
                   <Card key={i}>
                     <CardContent className="p-6">
-                      <div className="h-4 w-20 rounded bg-brand-lightgray" />
-                      <div className="mt-3 h-8 w-24 rounded bg-brand-lightgray" />
+                      <div className="h-4 w-20 rounded bg-brand-surface" />
+                      <div className="mt-3 h-8 w-24 rounded bg-brand-surface" />
                     </CardContent>
                   </Card>
                 ))}
@@ -292,22 +292,22 @@ export default function Analytics() {
               <div className="mb-4 rounded-full bg-red-50 p-3">
                 <AlertCircle className="h-6 w-6 text-red-500" />
               </div>
-              <h3 className="font-heading text-base font-semibold text-brand-dark">
+              <h3 className="font-heading text-base font-semibold text-brand-text">
                 Failed to load
               </h3>
-              <p className="mt-1 text-sm text-brand-mid font-body">{summaryError}</p>
+              <p className="mt-1 text-sm text-brand-muted font-body">{summaryError}</p>
             </div>
           ) : summary ? (
             <SummaryCards summary={summary} />
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="mb-4 rounded-full bg-brand-lightgray p-3">
-                <Activity className="h-6 w-6 text-brand-mid" />
+              <div className="mb-4 rounded-full bg-brand-surface p-3">
+                <Activity className="h-6 w-6 text-brand-muted" />
               </div>
-              <h3 className="font-heading text-base font-semibold text-brand-dark">
+              <h3 className="font-heading text-base font-semibold text-brand-text">
                 No data yet
               </h3>
-              <p className="mt-1 text-sm text-brand-mid font-body">
+              <p className="mt-1 text-sm text-brand-muted font-body">
                 No analytics data available for the selected period.
               </p>
             </div>
@@ -318,7 +318,7 @@ export default function Analytics() {
           {dailyLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="h-10 animate-pulse rounded bg-brand-lightgray" />
+                <div key={i} className="h-10 animate-pulse rounded bg-brand-surface" />
               ))}
             </div>
           ) : dailyError ? (
@@ -326,12 +326,12 @@ export default function Analytics() {
               <div className="mb-4 rounded-full bg-red-50 p-3">
                 <AlertCircle className="h-6 w-6 text-red-500" />
               </div>
-              <p className="text-sm text-brand-mid font-body">{dailyError}</p>
+              <p className="text-sm text-brand-muted font-body">{dailyError}</p>
             </div>
           ) : dailyStats.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Activity className="mb-4 h-8 w-8 text-brand-mid" />
-              <p className="text-sm text-brand-mid font-body">No daily data yet.</p>
+              <Activity className="mb-4 h-8 w-8 text-brand-muted" />
+              <p className="text-sm text-brand-muted font-body">No daily data yet.</p>
             </div>
           ) : (
             <Card>
@@ -346,13 +346,13 @@ export default function Analytics() {
                 <TableBody>
                   {dailyStats.map((row) => (
                     <TableRow key={row.date}>
-                      <TableCell className="font-body text-brand-dark">
+                      <TableCell className="font-body text-brand-text">
                         {row.date}
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary">{row.requests.toLocaleString()}</Badge>
                       </TableCell>
-                      <TableCell className="font-body tabular-nums text-brand-dark">
+                      <TableCell className="font-body tabular-nums text-brand-text">
                         ${row.cost_usd.toFixed(6)}
                       </TableCell>
                     </TableRow>
@@ -369,7 +369,7 @@ export default function Analytics() {
               <CardContent className="p-6">
                 <div className="animate-pulse space-y-4">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="h-6 rounded bg-brand-lightgray" />
+                    <div key={i} className="h-6 rounded bg-brand-surface" />
                   ))}
                 </div>
               </CardContent>
@@ -379,20 +379,20 @@ export default function Analytics() {
               <div className="mb-4 rounded-full bg-red-50 p-3">
                 <AlertCircle className="h-6 w-6 text-red-500" />
               </div>
-              <h3 className="font-heading text-base font-semibold text-brand-dark">
+              <h3 className="font-heading text-base font-semibold text-brand-text">
                 Failed to load
               </h3>
-              <p className="mt-1 text-sm text-brand-mid font-body">{requestsError}</p>
+              <p className="mt-1 text-sm text-brand-muted font-body">{requestsError}</p>
             </div>
           ) : requests.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="mb-4 rounded-full bg-brand-lightgray p-3">
-                <Activity className="h-6 w-6 text-brand-mid" />
+              <div className="mb-4 rounded-full bg-brand-surface p-3">
+                <Activity className="h-6 w-6 text-brand-muted" />
               </div>
-              <h3 className="font-heading text-base font-semibold text-brand-dark">
+              <h3 className="font-heading text-base font-semibold text-brand-text">
                 No request logs
               </h3>
-              <p className="mt-1 text-sm text-brand-mid font-body">
+              <p className="mt-1 text-sm text-brand-muted font-body">
                 No requests found for the selected filter.
               </p>
             </div>
@@ -416,7 +416,7 @@ export default function Analytics() {
                   <TableBody>
                     {requests.map((r) => (
                       <TableRow key={r.id}>
-                        <TableCell className="text-brand-mid text-xs whitespace-nowrap">
+                        <TableCell className="text-brand-muted text-xs whitespace-nowrap">
                           {new Date(r.created_at).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-xs font-mono max-w-[120px] truncate">
@@ -453,7 +453,7 @@ export default function Analytics() {
                             {r.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate text-brand-mid text-xs">
+                        <TableCell className="max-w-[200px] truncate text-brand-muted text-xs">
                           {r.prompt_preview ?? "—"}
                         </TableCell>
                       </TableRow>

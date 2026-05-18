@@ -18,7 +18,7 @@ const TableHeader = forwardRef<
   HTMLTableSectionElement,
   HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b border-brand-lightgray", className)} {...props} />
+  <thead ref={ref} className={cn("[&_tr]:border-b border-brand-border", className)} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -41,7 +41,7 @@ const TableFooter = forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t border-brand-lightgray bg-brand-light font-heading",
+      "border-t border-brand-border bg-brand-surface font-heading",
       className,
     )}
     {...props}
@@ -56,7 +56,7 @@ const TableRow = forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b border-brand-lightgray transition-colors hover:bg-brand-light/50 data-[state=selected]:bg-brand-light",
+      "border-b border-brand-border transition-colors hover:bg-brand-surface/50 data-[state=selected]:bg-brand-surface",
       className,
     )}
     {...props}

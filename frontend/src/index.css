@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-dark: #141413;
-  --color-brand-light: #faf9f5;
-  --color-brand-mid: #b0aea5;
-  --color-brand-lightgray: #e8e6dc;
+  --color-brand-bg: #141413;
+  --color-brand-surface: #1c1c1a;
+  --color-brand-text: #ededed;
+  --color-brand-muted: #9c9a92;
+  --color-brand-border: #2a2a28;
   --color-brand-orange: #d97757;
   --color-brand-blue: #6a9bcc;
   --color-brand-green: #788c5d;
@@ -14,7 +15,7 @@
 
 @layer base {
   body {
-    @apply m-0 bg-brand-light text-brand-dark font-body;
+    @apply m-0 bg-brand-bg text-brand-text font-body;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;

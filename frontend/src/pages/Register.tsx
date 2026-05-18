@@ -41,7 +41,7 @@ export default function Register() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-brand-light px-4">
+    <div className="flex min-h-screen items-center justify-center bg-brand-bg px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-brand-dark text-sm font-bold tracking-widest text-white font-heading">

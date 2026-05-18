@@ -192,14 +192,14 @@ export default function Keys() {
     return (
       <div className="space-y-4 animate-pulse">
         <div className="flex items-center justify-between">
-          <div className="h-8 w-32 rounded bg-brand-lightgray" />
-          <div className="h-10 w-28 rounded bg-brand-lightgray" />
+          <div className="h-8 w-32 rounded bg-brand-surface" />
+          <div className="h-10 w-28 rounded bg-brand-surface" />
         </div>
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-6 rounded bg-brand-lightgray" />
+                <div key={i} className="h-6 rounded bg-brand-surface" />
               ))}
             </div>
           </CardContent>
@@ -214,10 +214,10 @@ export default function Keys() {
         <div className="mb-4 rounded-full bg-red-50 p-3">
           <AlertCircle className="h-6 w-6 text-red-500" />
         </div>
-        <h3 className="font-heading text-base font-semibold text-brand-dark">
+        <h3 className="font-heading text-base font-semibold text-brand-text">
           Failed to load keys
         </h3>
-        <p className="mt-1 text-sm text-brand-mid font-body">{error}</p>
+        <p className="mt-1 text-sm text-brand-muted font-body">{error}</p>
         <Button variant="outline" className="mt-4" onClick={fetchKeys}>
           Try again
         </Button>
@@ -229,7 +229,7 @@ export default function Keys() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-brand-mid font-body">
+          <p className="text-sm text-brand-muted font-body">
             Manage your virtual API keys
           </p>
         </div>
@@ -257,12 +257,12 @@ export default function Keys() {
                   <p className="text-sm font-heading font-semibold text-brand-green">
                     Key Created Successfully
                   </p>
-                  <p className="mt-1 text-xs text-brand-mid font-body">
+                  <p className="mt-1 text-xs text-brand-muted font-body">
                     Copy this key now. You will not be able to see it again.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 truncate rounded-sm border border-brand-lightgray bg-brand-light px-3 py-2 font-mono text-xs">
+                  <code className="flex-1 truncate rounded-sm border border-brand-border bg-brand-surface px-3 py-2 font-mono text-xs">
                     {createdKey}
                   </code>
                   <Button
@@ -297,8 +297,8 @@ export default function Keys() {
                   onChange={(e) => updateField("name", e.target.value)}
                 />
 
-                <div className="rounded-sm border border-brand-lightgray p-3 space-y-3">
-                  <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-mid">
+                <div className="rounded-sm border border-brand-border p-3 space-y-3">
+                  <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
                     NVIDIA NIM Credentials
                   </p>
 
@@ -346,7 +346,7 @@ export default function Keys() {
                   </Button>
 
                   {nvidiaModels.length > 0 && (
-                    <p className="text-xs text-brand-mid font-body">
+                    <p className="text-xs text-brand-muted font-body">
                       {nvidiaModels.length} models available
                     </p>
                   )}
@@ -355,7 +355,7 @@ export default function Keys() {
                 {nvidiaModels.length > 0 && (
                   <>
                     <div className="space-y-1">
-                      <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-mid">
+                      <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
                         Weak Tier
                       </p>
                       <div className="grid grid-cols-1 gap-2">
@@ -378,7 +378,7 @@ export default function Keys() {
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-mid">
+                      <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
                         Mid Tier
                       </p>
                       <div className="grid grid-cols-1 gap-2">
@@ -401,7 +401,7 @@ export default function Keys() {
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-mid">
+                      <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
                         Strong Tier
                       </p>
                       <div className="grid grid-cols-1 gap-2">
@@ -448,13 +448,13 @@ export default function Keys() {
 
       {keys.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-4 rounded-full bg-brand-lightgray p-3">
-            <Key className="h-6 w-6 text-brand-mid" />
+          <div className="mb-4 rounded-full bg-brand-surface p-3">
+            <Key className="h-6 w-6 text-brand-muted" />
           </div>
-          <h3 className="font-heading text-base font-semibold text-brand-dark">
+          <h3 className="font-heading text-base font-semibold text-brand-text">
             No keys yet
           </h3>
-          <p className="mt-1 text-sm text-brand-mid font-body">
+          <p className="mt-1 text-sm text-brand-muted font-body">
             Create your first virtual key to start routing requests.
           </p>
         </div>
@@ -480,13 +480,13 @@ export default function Keys() {
                     <TableCell className="font-heading font-medium">
                       {k.name}
                     </TableCell>
-                    <TableCell className="text-brand-mid text-xs font-mono max-w-[120px] truncate">
+                    <TableCell className="text-brand-muted text-xs font-mono max-w-[120px] truncate">
                       {k.weak_model}
                     </TableCell>
-                    <TableCell className="text-brand-mid text-xs font-mono max-w-[120px] truncate">
+                    <TableCell className="text-brand-muted text-xs font-mono max-w-[120px] truncate">
                       {k.mid_model}
                     </TableCell>
-                    <TableCell className="text-brand-mid text-xs font-mono max-w-[120px] truncate">
+                    <TableCell className="text-brand-muted text-xs font-mono max-w-[120px] truncate">
                       {k.strong_model}
                     </TableCell>
                     <TableCell>
@@ -494,10 +494,10 @@ export default function Keys() {
                         {k.is_active ? "Active" : "Revoked"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-brand-mid text-xs whitespace-nowrap">
+                    <TableCell className="text-brand-muted text-xs whitespace-nowrap">
                       {new Date(k.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-brand-mid text-xs whitespace-nowrap">
+                    <TableCell className="text-brand-muted text-xs whitespace-nowrap">
                       {k.last_used_at
                         ? new Date(k.last_used_at).toLocaleDateString()
                         : "—"}

@@ -205,9 +205,9 @@ export default function Chat() {
   if (keys.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Bot className="mb-4 h-12 w-12 text-brand-mid" />
-        <h3 className="font-heading text-lg font-semibold text-brand-dark">No API Keys</h3>
-        <p className="mt-2 text-sm text-brand-mid font-body">
+        <Bot className="mb-4 h-12 w-12 text-brand-muted" />
+        <h3 className="font-heading text-lg font-semibold text-brand-text">No API Keys</h3>
+        <p className="mt-2 text-sm text-brand-muted font-body">
           Create an API key first to test the chat routing feature.
         </p>
         <Button className="mt-4" onClick={() => navigate("/keys")}>
@@ -221,8 +221,8 @@ export default function Chat() {
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-brand-dark">Playground</h1>
-          <p className="text-sm text-brand-mid font-body">
+          <h1 className="font-heading text-2xl font-bold text-brand-text">Playground</h1>
+          <p className="text-sm text-brand-muted font-body">
             Send prompts to test the intelligent routing engine
           </p>
         </div>
@@ -232,7 +232,7 @@ export default function Chat() {
               setMessages([])
               localStorage.removeItem(CHAT_STORAGE_KEY)
             }}
-            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-brand-mid hover:text-red-600 hover:bg-red-50 transition-colors font-body"
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-brand-muted hover:text-red-400 hover:bg-red-950/40 transition-colors font-body"
             title="Clear chat"
           >
             <Trash2 className="h-4 w-4" />
@@ -246,11 +246,11 @@ export default function Chat() {
           <div className="flex-1 overflow-y-auto space-y-4 p-4">
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <Bot className="mb-4 h-16 w-16 text-brand-lightgray" />
-                <h3 className="font-heading text-lg font-semibold text-brand-dark">
+                <Bot className="mb-4 h-16 w-16 text-brand-muted" />
+                <h3 className="font-heading text-lg font-semibold text-brand-text">
                   Test Your Router
                 </h3>
-                <p className="mt-2 max-w-md text-sm text-brand-mid font-body">
+                <p className="mt-2 max-w-md text-sm text-brand-muted font-body">
                   Select a key below (or paste one) and send a prompt to see which tier
                   the router selects based on complexity analysis.
                 </p>
@@ -260,7 +260,7 @@ export default function Chat() {
                 <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
                   <div
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                      msg.role === "user" ? "bg-brand-orange" : "bg-brand-dark"
+                      msg.role === "user" ? "bg-brand-orange" : "bg-brand-border"
                     }`}
                   >
                     {msg.role === "user"
@@ -279,7 +279,7 @@ export default function Chat() {
                       className={`w-full rounded-lg px-4 py-2 ${
                         msg.role === "user"
                           ? "bg-brand-orange text-white"
-                          : "bg-brand-light text-brand-dark"
+                          : "bg-brand-bg text-brand-text"
                       }`}
                     >
                       {msg.role === "assistant" && msg.tierLabel && (
@@ -296,7 +296,7 @@ export default function Chat() {
                             {msg.tierLabel}
                           </span>
                           {msg.modelName && (
-                            <span className="text-[11px] text-brand-mid font-mono truncate max-w-[200px]">
+                            <span className="text-[11px] text-brand-muted font-mono truncate max-w-[200px]">
                               {msg.modelName}
                             </span>
                           )}
@@ -317,7 +317,7 @@ export default function Chat() {
                     {msg.role === "assistant" && (
                       <button
                         onClick={() => copyMessage(msg.content, i)}
-                        className="ml-1 flex items-center gap-1 text-xs text-brand-mid hover:text-brand-dark transition-colors"
+                        className="ml-1 flex items-center gap-1 text-xs text-brand-muted hover:text-brand-text transition-colors"
                         title="Copy message"
                       >
                         {copiedIndex === i ? (
@@ -339,12 +339,12 @@ export default function Chat() {
             )}
             {sending && (
               <div className="flex gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-dark">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-border">
                   <Bot className="h-4 w-4 text-white" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-brand-mid" />
-                  <span className="text-sm text-brand-mid font-body">Thinking...</span>
+                  <Loader2 className="h-4 w-4 animate-spin text-brand-muted" />
+                  <span className="text-sm text-brand-muted font-body">Thinking...</span>
                 </div>
               </div>
             )}
@@ -356,7 +356,7 @@ export default function Chat() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-brand-lightgray space-y-3 p-5">
+          <div className="border-t border-brand-border space-y-3 p-5">
             <div className="flex items-center gap-3">
               <Select value={selectedKey} onValueChange={setSelectedKey}>
                 <SelectTrigger className="w-64 sm:w-72">
@@ -371,7 +371,7 @@ export default function Chat() {
                 </SelectContent>
               </Select>
               {!manualKey.trim() && !getStoredKey(selectedKey) && (
-                <span className="text-xs text-brand-mid font-body">
+                <span className="text-xs text-brand-muted font-body">
                   (key not available — paste below)
                 </span>
               )}
@@ -379,7 +379,7 @@ export default function Chat() {
 
             {!hasKey() && (
               <div className="flex items-center gap-2">
-                <KeyRound className="h-4 w-4 shrink-0 text-brand-mid" />
+                <KeyRound className="h-4 w-4 shrink-0 text-brand-muted" />
                 <Input
                   placeholder="Paste virtual key (lmr-...)"
                   value={manualKey}
@@ -413,7 +413,7 @@ export default function Chat() {
 
             {lastRouting && (
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-brand-mid font-body">Routed to:</span>
+                <span className="text-brand-muted font-body">Routed to:</span>
                 <span
                   className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-white capitalize ${
                     lastRouting.tier === 0 ? "bg-yellow-500"
@@ -427,7 +427,7 @@ export default function Chat() {
                   }
                   {lastRouting.tier_name}
                 </span>
-                <span className="text-brand-mid font-body">
+                <span className="text-brand-muted font-body">
                   ({(lastRouting.confidence * 100).toFixed(0)}% confidence)
                 </span>
               </div>

@@ -48,19 +48,19 @@ export default function Dashboard() {
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-6">
-                <div className="h-4 w-20 rounded bg-brand-lightgray" />
-                <div className="mt-3 h-8 w-24 rounded bg-brand-lightgray" />
+                <div className="h-4 w-20 rounded bg-brand-border" />
+                <div className="mt-3 h-8 w-24 rounded bg-brand-border" />
               </CardContent>
             </Card>
           ))}
         </div>
         <Card>
           <CardContent className="p-6">
-            <div className="h-4 w-32 rounded bg-brand-lightgray" />
+                <div className="h-4 w-32 rounded bg-brand-border" />
             <div className="mt-4 flex gap-8">
-              <div className="h-6 w-16 rounded bg-brand-lightgray" />
-              <div className="h-6 w-16 rounded bg-brand-lightgray" />
-              <div className="h-6 w-16 rounded bg-brand-lightgray" />
+              <div className="h-6 w-16 rounded bg-brand-border" />
+              <div className="h-6 w-16 rounded bg-brand-border" />
+              <div className="h-6 w-16 rounded bg-brand-border" />
             </div>
           </CardContent>
         </Card>
@@ -71,13 +71,13 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 rounded-full bg-red-50 p-3">
-          <Activity className="h-6 w-6 text-red-500" />
+        <div className="mb-4 rounded-full bg-red-950/30 p-3">
+          <Activity className="h-6 w-6 text-red-400" />
         </div>
-        <h3 className="font-heading text-base font-semibold text-brand-dark">
+        <h3 className="font-heading text-base font-semibold text-brand-text">
           Failed to load
         </h3>
-        <p className="mt-1 text-sm text-brand-mid font-body">{error}</p>
+        <p className="mt-1 text-sm text-brand-muted font-body">{error}</p>
       </div>
     )
   }
@@ -85,13 +85,13 @@ export default function Dashboard() {
   if (!summary) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 rounded-full bg-brand-lightgray p-3">
-          <Activity className="h-6 w-6 text-brand-mid" />
+        <div className="mb-4 rounded-full bg-brand-border p-3">
+          <Activity className="h-6 w-6 text-brand-muted" />
         </div>
-        <h3 className="font-heading text-base font-semibold text-brand-dark">
+        <h3 className="font-heading text-base font-semibold text-brand-text">
           No data yet
         </h3>
-        <p className="mt-1 text-sm text-brand-mid font-body">
+        <p className="mt-1 text-sm text-brand-muted font-body">
           Start routing requests through your keys to see analytics.
         </p>
       </div>
@@ -134,7 +134,7 @@ export default function Dashboard() {
             <Card key={stat.label}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-mid">
+                  <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
                     {stat.label}
                   </p>
                   <Icon className={`h-4 w-4 ${stat.color}`} />
@@ -172,14 +172,14 @@ export default function Dashboard() {
                     {tier}
                   </Badge>
                   <div className="flex-1">
-                    <div className="h-2 rounded-full bg-brand-lightgray">
+                    <div className="h-2 rounded-full bg-brand-border">
                       <div
                         className="h-2 rounded-full bg-brand-orange/70 transition-all"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-body text-brand-mid tabular-nums">
+                  <span className="text-sm font-body text-brand-muted tabular-nums">
                     {count.toLocaleString()} ({pct}%)
                   </span>
                 </div>
@@ -187,15 +187,15 @@ export default function Dashboard() {
             })}
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-4 border-t border-brand-lightgray pt-4 text-sm">
+          <div className="mt-6 grid grid-cols-2 gap-4 border-t border-brand-border pt-4 text-sm">
             <div>
-              <span className="font-heading text-brand-mid">Total Cost</span>
-              <p className="font-heading font-semibold text-brand-dark">
+              <span className="font-heading text-brand-muted">Total Cost</span>
+              <p className="font-heading font-semibold text-brand-text">
                 ${summary.total_cost_usd.toFixed(6)}
               </p>
             </div>
             <div>
-              <span className="font-heading text-brand-mid">Cost vs Strong</span>
+              <span className="font-heading text-brand-muted">Cost vs Strong</span>
               <p className="flex items-center gap-1 font-heading font-semibold text-brand-green">
                 <ArrowUpRight className="h-3 w-3" />
                 ${summary.cost_saved_vs_always_strong.toFixed(4)} saved
