@@ -7,7 +7,7 @@ from typing import AsyncIterator
 logger = logging.getLogger(__name__)
 
 # Default timeout in seconds — can be overridden via env var
-DISPATCH_TIMEOUT = int(os.getenv("DISPATCH_TIMEOUT", "30"))
+DISPATCH_TIMEOUT = int(os.getenv("DISPATCH_TIMEOUT", "300"))
 
 TIER_MAP = {0: "weak", 1: "mid", 2: "strong"}
 

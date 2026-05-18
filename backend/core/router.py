@@ -66,6 +66,8 @@ def _heuristic_route(prompt: str) -> dict:
     else:
         difficulty = min(score / 10.0, 1.0)
 
+    logger.info("Heuristic route: complexity_score=%.2f → tier=%d", score, tier)
+
     return {
         "tier"            : tier,
         "tier_name"       : TIER_NAMES[tier],
@@ -88,6 +90,8 @@ def route_prompt(prompt: str) -> dict:
     tier = int(np.argmax(probs))
     confidence = float(probs[tier])
 
+    logger.info("ML prediction: tier=%d conf=%.4f probs=%s", tier, confidence, probs.tolist())
+
     if REGRESSOR is not None:
         # expect 2D array, returns 1D array
         difficulty = float(REGRESSOR.predict([features])[0])
@@ -98,6 +102,7 @@ def route_prompt(prompt: str) -> dict:
     if confidence < CONFIDENCE_THRESHOLD and tier < 2:
         tier += 1
         upgraded = True
+        logger.info("Low confidence (%.4f < %.2f), upgraded tier %d → %d", confidence, CONFIDENCE_THRESHOLD, tier - 1, tier)
 
     return {
         "tier"            : tier,

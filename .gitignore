@@ -11,3 +11,9 @@ wheels/
 .env
 .sisyphus
 /node_modules
+
+# Backend-specific
+backend/__pycache__/
+backend/.venv/
+backend/*.egg-info/
+backend/wheels/

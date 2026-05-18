@@ -32,6 +32,7 @@ export interface ChatResponse {
     difficulty_score: number
     upgraded: boolean
     rerouted: boolean
+    fallback_reason?: string
   }
 }
 
@@ -52,6 +53,7 @@ export interface ChatChunk {
     difficulty_score: number
     upgraded: boolean
     rerouted: boolean
+    fallback_reason?: string
   }
 }
 
@@ -59,24 +61,25 @@ export interface ChatError {
   error: string
 }
 
-export async function sendChatMessage(
-  virtualKey: string,
-  messages: ChatMessage[],
-  stream = false
-): Promise<ChatResponse> {
-  return apiRequest<ChatResponse>("/v1/chat/completions", {
-    method: "POST",
-    body: { messages, stream },
-    headers: {
-      Authorization: `Bearer ${virtualKey}`,
-    },
-  }, false)
+export interface FallbackNotice {
+  type: "fallback_notice"
+  from_tier: string
+  to_tier: string
+  from_model: string
+  to_model: string
+  reason: string
+  message: string
+}
+
+export interface StreamError {
+  type: "error"
+  message: string
 }
 
 export async function* streamChatMessage(
   virtualKey: string,
   messages: ChatMessage[]
-): AsyncGenerator<ChatChunk | ChatError> {
+): AsyncGenerator<ChatChunk | FallbackNotice | StreamError> {
   const response = await fetch("/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -98,23 +101,37 @@ export async function* streamChatMessage(
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
 
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
 
-    const text = decoder.decode(value)
-    const lines = text.split("\n")
+      const text = decoder.decode(value)
+      const lines = text.split("\n")
 
-    for (const line of lines) {
-      if (line.startsWith("data: ")) {
-        const data = line.slice(6)
-        if (data === "[DONE]") return
-        try {
-          yield JSON.parse(data) as ChatChunk
-        } catch {
-          // Skip invalid JSON
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6)
+          if (data === "[DONE]") return
+          try {
+            const parsed = JSON.parse(data)
+            if (parsed.type === "fallback_notice" || parsed.type === "error") {
+              yield parsed
+            } else {
+              yield parsed as ChatChunk
+            }
+          } catch {
+            // malformed chunk — skip
+          }
         }
       }
     }
+  } catch (err) {
+    if (err instanceof TypeError && err.message.includes("fetch")) {
+      throw new ApiError(504, "Connection lost while streaming. Try again.")
+    }
+    throw err
+  } finally {
+    reader.releaseLock()
   }
 }

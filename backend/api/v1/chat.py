@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dependencies import get_virtual_key
 from core.dispatcher import dispatch_stream, dispatch_sync, DISPATCH_TIMEOUT
-from core.router import route_prompt
+from core.router import route_prompt, TIER_NAMES
 from db.database import get_db
 from db.models import VirtualKey
 from db import crud
@@ -56,15 +56,19 @@ async def chat_completions(
 
             dispatch_start = time.time()
             try:
-                for attempt in ([routing["tier"]] if routing["tier"] == 0 else [routing["tier"], 0]):
+                # Build cascading fallback chain: 2→[2,1,0], 1→[1,0], 0→[0]
+                original_tier = routing["tier"]
+                attempts = list(range(original_tier, -1, -1))
+                for attempt in attempts:
                     try:
                         stream_obj, model_used = await dispatch_stream(
                             messages, virtual_key, attempt
                         )
-                        if attempt != routing["tier"]:
+                        if attempt != original_tier:
                             routing["tier"] = attempt
-                            routing["tier_name"] = "weak"
+                            routing["tier_name"] = TIER_NAMES.get(attempt, "weak")
                             routing["rerouted"] = True
+                            routing["fallback_reason"] = f"Tier {original_tier} ({TIER_NAMES.get(original_tier, 'unknown')}) failed, cascaded to tier {attempt}"
                         first = True
                         async for chunk in stream_obj:
                             if chunk.usage is not None:
@@ -83,24 +87,20 @@ async def chat_completions(
                         break
                     except TimeoutError as e:
                         logger.warning("Dispatch timeout on tier %d: %s", attempt, e)
-                        if attempt != 0:
-                            routing["tier"] = 0
-                            routing["tier_name"] = "weak"
-                            routing["rerouted"] = True
+                        if attempt > 0:
                             continue
                         status = "timeout"
                         error_msg = str(e)
+                        routing["fallback_reason"] = f"All tiers failed (original: tier {original_tier})"
                         yield f"data: {{\"error\": \"Request timed out after {DISPATCH_TIMEOUT}s. Please try again.\"}}\n\n"
                         break
                     except Exception as e:
                         logger.error("Dispatch error on tier %d: %s", attempt, e)
                         status = "error"
                         error_msg = str(e)
-                        if attempt != 0:
-                            routing["tier"] = 0
-                            routing["tier_name"] = "weak"
-                            routing["rerouted"] = True
+                        if attempt > 0:
                             continue
+                        routing["fallback_reason"] = f"All tiers failed (original: tier {original_tier})"
                         yield f"data: {{\"error\": \"Service unavailable. Please try again.\"}}\n\n"
                         break
             except Exception as e:
@@ -131,75 +131,35 @@ async def chat_completions(
 
     model_used = None
     dispatch_start = time.time()
-    try:
-        response, model_used = await dispatch_sync(
-            messages, virtual_key, routing["tier"]
-        )
-    except TimeoutError as e:
-        logger.warning("Dispatch timeout on tier %d: %s", routing["tier"], e)
-        if routing["tier"] != 0:
-            try:
-                routing["tier"] = 0
-                routing["tier_name"] = "weak"
+    original_tier = routing["tier"]
+    attempts = list(range(original_tier, -1, -1))
+    for attempt in attempts:
+        try:
+            response, model_used = await dispatch_sync(
+                messages, virtual_key, attempt
+            )
+            if attempt != original_tier:
+                routing["tier"] = attempt
+                routing["tier_name"] = TIER_NAMES.get(attempt, "weak")
                 routing["rerouted"] = True
-                response, model_used = await dispatch_sync(
-                    messages, virtual_key, 0
-                )
-            except TimeoutError as e2:
-                logger.warning("Weak tier also timed out: %s", e2)
-                dispatch_ms = int((time.time() - dispatch_start) * 1000)
-                latency_ms = int((time.time() - start) * 1000)
-                background_tasks.add_task(
-                    _log, db, virtual_key, prompt, routing, model_used,
-                    {"input_tokens": None, "output_tokens": None},
-                    latency_ms, "timeout", str(e2), routing_ms, dispatch_ms
-                )
-                raise HTTPException(status_code=504, detail=str(e2))
-            except Exception as e2:
-                dispatch_ms = int((time.time() - dispatch_start) * 1000)
-                latency_ms = int((time.time() - start) * 1000)
-                background_tasks.add_task(
-                    _log, db, virtual_key, prompt, routing, model_used,
-                    {"input_tokens": None, "output_tokens": None},
-                    latency_ms, "error", str(e2), routing_ms, dispatch_ms
-                )
-                raise HTTPException(status_code=502, detail=str(e2))
-        else:
+                routing["fallback_reason"] = f"Tier {original_tier} ({TIER_NAMES.get(original_tier, 'unknown')}) failed, cascaded to tier {attempt}"
+            break
+        except (TimeoutError, Exception) as e:
+            logger.warning("Dispatch %s on tier %d: %s",
+                           "timeout" if isinstance(e, TimeoutError) else "error", attempt, e)
+            if attempt > 0:
+                continue
             dispatch_ms = int((time.time() - dispatch_start) * 1000)
             latency_ms = int((time.time() - start) * 1000)
+            routing["fallback_reason"] = f"All tiers failed (original: tier {original_tier})"
             background_tasks.add_task(
                 _log, db, virtual_key, prompt, routing, model_used,
                 {"input_tokens": None, "output_tokens": None},
-                latency_ms, "timeout", str(e), routing_ms, dispatch_ms
+                latency_ms, "timeout" if isinstance(e, TimeoutError) else "error",
+                str(e), routing_ms, dispatch_ms
             )
-            raise HTTPException(status_code=504, detail=str(e))
-    except Exception as original_error:
-        if routing["tier"] != 0:
-            try:
-                routing["tier"] = 0
-                routing["tier_name"] = "weak"
-                routing["rerouted"] = True
-                response, model_used = await dispatch_sync(
-                    messages, virtual_key, 0
-                )
-            except Exception:
-                dispatch_ms = int((time.time() - dispatch_start) * 1000)
-                latency_ms = int((time.time() - start) * 1000)
-                background_tasks.add_task(
-                    _log, db, virtual_key, prompt, routing, model_used,
-                    {"input_tokens": None, "output_tokens": None},
-                    latency_ms, "error", str(original_error), routing_ms, dispatch_ms
-                )
-                raise HTTPException(status_code=502, detail=str(original_error))
-        else:
-            dispatch_ms = int((time.time() - dispatch_start) * 1000)
-            latency_ms = int((time.time() - start) * 1000)
-            background_tasks.add_task(
-                _log, db, virtual_key, prompt, routing, model_used,
-                {"input_tokens": None, "output_tokens": None},
-                latency_ms, "error", str(original_error), routing_ms, dispatch_ms
-            )
-            raise HTTPException(status_code=502, detail=str(original_error))
+            status_code = 504 if isinstance(e, TimeoutError) else 502
+            raise HTTPException(status_code=status_code, detail=str(e))
 
     dispatch_ms = int((time.time() - dispatch_start) * 1000)
     latency_ms = int((time.time() - start) * 1000)
