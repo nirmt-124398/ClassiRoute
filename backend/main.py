@@ -1,21 +1,23 @@
 import asyncio
 import os
+import sys
 import subprocess
 from contextlib import asynccontextmanager, suppress
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.v1 import auth, keys, chat, analytics, users
 from core import router as router_mod
 from services.error_tracking import init_sentry
+from db.database import dispose_engine, check_db_connected
 
 
 def _run_alembic_upgrade() -> None:
-    """Run alembic upgrade head in a subprocess to avoid event loop conflicts."""
     project_dir = os.path.dirname(os.path.abspath(__file__))
-    venv_python = os.path.join(project_dir, ".venv", "bin", "python3")
+    python = getattr(sys, "_venv_python", None) or sys.executable or "python3"
     result = subprocess.run(
-        [venv_python, "-c", "from alembic.config import main; main()", "upgrade", "head"],
+        [python, "-c", "from alembic.config import main; main()", "upgrade", "head"],
         capture_output=True, text=True,
         cwd=project_dir,
     )
@@ -33,12 +35,23 @@ async def lifespan(app: FastAPI):
     router_mod.load_models()
     init_sentry()
     yield
+    await dispose_engine()
 
 
 app = FastAPI(
-    title="LLMRouter",
+    title="ClassiRoute",
     version="1.0.0",
     lifespan=lifespan
+)
+
+# CORS — allow frontend (Vercel) to call backend (Render)
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
@@ -50,7 +63,12 @@ app.include_router(users.router, prefix="/users", tags=["Users"])
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "model_loaded": router_mod.CLASSIFIER is not None}
+    db_ok = await check_db_connected()
+    return {
+        "status": "ok" if db_ok else "degraded",
+        "db_connected": db_ok,
+        "model_loaded": router_mod.CLASSIFIER is not None,
+    }
 
 
 @app.exception_handler(Exception)
