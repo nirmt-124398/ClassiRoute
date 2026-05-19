@@ -3,12 +3,11 @@ import logging
 import time
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dependencies import get_virtual_key
-from core.dispatcher import dispatch_stream, dispatch_sync, DISPATCH_TIMEOUT
+from core.dispatcher import dispatch_stream, dispatch_sync
 from core.router import route_prompt, TIER_NAMES
-from db.database import get_db
+from db.database import AsyncSessionLocal
 from db.models import VirtualKey
 from db import crud
 from services.telemetry import capture_request, capture_error
@@ -23,7 +22,6 @@ async def chat_completions(
     request: Request,
     background_tasks: BackgroundTasks,
     virtual_key: VirtualKey = Depends(get_virtual_key),
-    db: AsyncSession = Depends(get_db),
     _: bool = Depends(rate_limit_chat),
 ):
     body = await request.json()
@@ -65,6 +63,8 @@ async def chat_completions(
                             messages, virtual_key, attempt
                         )
                         if attempt != original_tier:
+                            routing["original_tier"] = original_tier
+                            routing["original_tier_name"] = TIER_NAMES.get(original_tier, "unknown")
                             routing["tier"] = attempt
                             routing["tier_name"] = TIER_NAMES.get(attempt, "weak")
                             routing["rerouted"] = True
@@ -85,15 +85,6 @@ async def chat_completions(
                                 yield f"data: {chunk.model_dump_json()}\n\n"
                         yield "data: [DONE]\n\n"
                         break
-                    except TimeoutError as e:
-                        logger.warning("Dispatch timeout on tier %d: %s", attempt, e)
-                        if attempt > 0:
-                            continue
-                        status = "timeout"
-                        error_msg = str(e)
-                        routing["fallback_reason"] = f"All tiers failed (original: tier {original_tier})"
-                        yield f"data: {{\"error\": \"Request timed out after {DISPATCH_TIMEOUT}s. Please try again.\"}}\n\n"
-                        break
                     except Exception as e:
                         logger.error("Dispatch error on tier %d: %s", attempt, e)
                         status = "error"
@@ -108,15 +99,14 @@ async def chat_completions(
                     status = "error"
                     error_msg = str(e)
                 capture_error(str(virtual_key.user_id), str(e), {"tier": routing["tier"], "stream": True})
-                if status != "timeout":
-                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
             finally:
                 dispatch_ms = int((time.time() - dispatch_start) * 1000)
                 logger.info("dispatch: tier=%s model=%s time=%dms status=%s",
                             routing["tier_name"], model_used or "unknown", dispatch_ms, status)
                 latency_ms = int((time.time() - start) * 1000)
                 background_tasks.add_task(
-                    _log, db, virtual_key, prompt, routing,
+                    _log, virtual_key, prompt, routing,
                     model_used, usage, latency_ms, status, error_msg,
                     routing_ms, dispatch_ms
                 )
@@ -144,29 +134,27 @@ async def chat_completions(
                 routing["rerouted"] = True
                 routing["fallback_reason"] = f"Tier {original_tier} ({TIER_NAMES.get(original_tier, 'unknown')}) failed, cascaded to tier {attempt}"
             break
-        except (TimeoutError, Exception) as e:
-            logger.warning("Dispatch %s on tier %d: %s",
-                           "timeout" if isinstance(e, TimeoutError) else "error", attempt, e)
+        except Exception as e:
+            logger.error("Dispatch error on tier %d: %s", attempt, e)
             if attempt > 0:
                 continue
             dispatch_ms = int((time.time() - dispatch_start) * 1000)
             latency_ms = int((time.time() - start) * 1000)
             routing["fallback_reason"] = f"All tiers failed (original: tier {original_tier})"
             background_tasks.add_task(
-                _log, db, virtual_key, prompt, routing, model_used,
+                _log, virtual_key, prompt, routing, model_used,
                 {"input_tokens": None, "output_tokens": None},
-                latency_ms, "timeout" if isinstance(e, TimeoutError) else "error",
+                latency_ms, "error",
                 str(e), routing_ms, dispatch_ms
             )
-            status_code = 504 if isinstance(e, TimeoutError) else 502
-            raise HTTPException(status_code=status_code, detail=str(e))
+            raise HTTPException(status_code=502, detail=str(e))
 
     dispatch_ms = int((time.time() - dispatch_start) * 1000)
     latency_ms = int((time.time() - start) * 1000)
     result = response.model_dump()
     result["x-llmrouter"] = routing
     background_tasks.add_task(
-        _log, db, virtual_key, prompt, routing, model_used,
+        _log, virtual_key, prompt, routing, model_used,
         {
             "input_tokens": response.usage.prompt_tokens if response.usage else None,
             "output_tokens": response.usage.completion_tokens if response.usage else None,
@@ -177,7 +165,6 @@ async def chat_completions(
 
 
 async def _log(
-    db: AsyncSession,
     virtual_key: VirtualKey,
     prompt: str,
     routing: dict,
@@ -191,24 +178,28 @@ async def _log(
 ):
     model_name = model_used or "unknown"
 
-    await crud.log_request(
-        db,
-        virtual_key_id=virtual_key.id,
-        user_id=virtual_key.user_id,
-        prompt_preview=prompt[:200],
-        prompt_length=len(prompt),
-        tier_assigned=routing["tier"],
-        confidence=routing["confidence"],
-        model_used=model_name,
-        input_tokens=usage.get("input_tokens"),
-        output_tokens=usage.get("output_tokens"),
-        latency_ms=latency_ms,
-        cost_estimate_usd=_estimate_cost(model_name, usage),
-        status=status,
-        error_message=error_msg,
-    )
+    try:
+        async with AsyncSessionLocal() as db:
+            await crud.log_request(
+                db,
+                virtual_key_id=virtual_key.id,
+                user_id=virtual_key.user_id,
+                prompt_preview=prompt[:200],
+                prompt_length=len(prompt),
+                tier_assigned=routing["tier"],
+                confidence=routing["confidence"],
+                model_used=model_name,
+                input_tokens=usage.get("input_tokens"),
+                output_tokens=usage.get("output_tokens"),
+                latency_ms=latency_ms,
+                cost_estimate_usd=_estimate_cost(model_name, usage),
+                status=status,
+                error_message=error_msg,
+            )
 
-    await crud.touch_key(db, key_id=virtual_key.id)
+            await crud.touch_key(db, key_id=virtual_key.id)
+    except Exception as exc:
+        logger.error("Failed to log request to DB: %s", exc)
 
     capture_request(
         user_id=str(virtual_key.user_id),
