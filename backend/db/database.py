@@ -26,7 +26,7 @@ if raw_database_url:
         raw_database_url = raw_database_url.replace("postgres://", "postgresql+asyncpg://", 1)
     elif raw_database_url.startswith("postgresql://") and "+asyncpg" not in raw_database_url:
         raw_database_url = raw_database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    raw_database_url = re.sub(r"(?i)[?&]sslmode=[^&]*", "", raw_database_url).replace("?&", "?").rstrip("?")
+    raw_database_url = re.sub(r"(?i)[?&]sslmode=[^&]*", "", raw_database_url).replace("?&", "?").rstrip("?").rstrip("&")
 
 DATABASE_URL = raw_database_url or "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 DB_SCHEMA = os.getenv("DB_SCHEMA")
@@ -68,6 +68,7 @@ class Base(DeclarativeBase):
 # ── Engine lifecycle for app shutdown ───────────────────────────────────────
 
 _engine_disposed = False
+_dispose_lock = asyncio.Lock()
 
 
 async def dispose_engine() -> None:
@@ -79,12 +80,15 @@ async def dispose_engine() -> None:
     global _engine_disposed
     if _engine_disposed:
         return
-    _engine_disposed = True
-    try:
-        await engine.dispose()
-        logger.info("Database engine disposed")
-    except Exception as exc:
-        logger.warning("Error disposing database engine: %s", exc)
+    async with _dispose_lock:
+        if _engine_disposed:
+            return
+        _engine_disposed = True
+        try:
+            await engine.dispose()
+            logger.info("Database engine disposed")
+        except Exception as exc:
+            logger.warning("Error disposing database engine: %s", exc)
 
 
 # ── Retryable error types ───────────────────────────────────────────────────
@@ -174,7 +178,7 @@ async def run_with_retry(db_op, *args, session: AsyncSession | None = None, **kw
         return await db_op(current_session, *args, **kwargs)
     except DB_RETRYABLE as exc:
         logger.warning("DB error on attempt 1/%d: %s", MAX_DB_RETRIES + 1, exc)
-    except BaseException:
+    except Exception:
         if session is None:
             await current_session.close()
         raise
