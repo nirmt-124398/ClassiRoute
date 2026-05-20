@@ -45,7 +45,7 @@ async def create_virtual_key(
     mid_model: str, mid_api_key: str, mid_base_url: str,
     strong_model: str, strong_api_key: str, strong_base_url: str,
 ) -> tuple[VirtualKey, str]:
-    raw_key = f"lmr-{secrets.token_hex(32)}"
+    raw_key = f"clr-{secrets.token_hex(32)}"
     hashed_key = hash_key(raw_key)
 
     new_key = VirtualKey(

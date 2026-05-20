@@ -7,6 +7,8 @@ interface ChatMessageDisplay extends ChatMessage {
   tierLabel?: string
   modelName?: string
   fallbackReason?: string
+  rerouted?: boolean
+  originalTier?: string
   timestamp?: number
 }
 import { ApiError } from "@/api/client"
@@ -136,6 +138,64 @@ export default function Chat() {
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
+  // ─── Context window management ───────────────────────────────────────
+  //
+  //  Token budget instead of a hard message cap.  This lets short messages
+  //  keep more history while long messages don't blow the model's context.
+  //
+  const CTX_BUDGET = 6000         // target tokens for conversation history
+  const CHARS_PER_TOKEN = 4       // rough English estimate
+
+  function estimateTokens(text: string): number {
+    return Math.ceil(text.length / CHARS_PER_TOKEN)
+  }
+
+  function toApiMessages(msgs: ChatMessageDisplay[]): ChatMessage[] {
+    // 1. Strip display-only fields, drop empty messages, dedupe consecutive
+    //    same-role (can happen on retry / error).
+    const cleaned: ChatMessage[] = []
+    for (const m of msgs) {
+      if (!m.role || !m.content) continue               // ← skip empty / corrupt
+      const msg: ChatMessage = { role: m.role, content: m.content }
+      if (cleaned.length > 0 && cleaned.at(-1)!.role === msg.role) continue
+      cleaned.push(msg)
+    }
+    // Conversation must always start with a user turn
+    if (cleaned.length > 0 && cleaned[0].role !== "user") cleaned.shift()
+    if (cleaned.length === 0) return cleaned
+
+    // 2. Under budget?  Send everything.
+    const totalTokens = cleaned.reduce((s, m) => s + estimateTokens(m.content), 0)
+    if (totalTokens <= CTX_BUDGET) return cleaned
+
+    // 3. Over budget — keep the **newest** messages that fit.
+    const result: ChatMessage[] = []
+    let budget = CTX_BUDGET
+
+    for (let i = cleaned.length - 1; i >= 0; i--) {
+      const t = estimateTokens(cleaned[i].content)
+      if (t <= budget) {
+        result.unshift(cleaned[i])
+        budget -= t
+      } else {
+        break          // message alone exceeds budget → stop here
+      }
+    }
+
+    // 4. Safety net — even a single message can be too long.
+    //    Send a truncated version so the AI at least sees the user's last turn.
+    if (result.length === 0 && cleaned.length > 0) {
+      const last = cleaned.at(-1)!
+      const maxChars = CTX_BUDGET * CHARS_PER_TOKEN
+      result.push({ role: last.role, content: last.content.slice(-maxChars) })
+    }
+
+    // After removal of oldest messages the window may start with assistant
+    if (result.length > 0 && result[0].role !== "user") result.shift()
+
+    return result
+  }
+
   function resolveKey(): string | null {
     if (manualKey.trim()) return manualKey.trim()
     if (selectedKey) {
@@ -165,6 +225,7 @@ export default function Chat() {
     setLastRouting(undefined)
 
     const allMessages = [...messages, userMsg]
+    const apiMessages = toApiMessages(allMessages)
 
     try {
       let content = ""
@@ -172,7 +233,9 @@ export default function Chat() {
       let currentTierLabel = ""
       let currentModelName = ""
       let currentFallbackReason: string | undefined
-      for await (const chunk of streamChatMessage(rawKey, allMessages)) {
+      let currentRerouted = false
+      let currentOriginalTier = ""
+      for await (const chunk of streamChatMessage(rawKey, apiMessages)) {
         if ("type" in chunk && chunk.type === "fallback_notice") {
           setFallbackNotice(chunk)
           continue
@@ -191,6 +254,8 @@ export default function Chat() {
           const routing = chunk["x-llmrouter"]
           currentTierLabel = routing.tier_name ?? "unknown"
           currentFallbackReason = routing.fallback_reason
+          currentRerouted = routing.rerouted ?? false
+          currentOriginalTier = routing.original_tier_name ?? ""
           const tierNum = routing.tier
           const selected = keys.find(k => k.key_id === selectedKey)
           if (selected) {
@@ -212,6 +277,8 @@ export default function Chat() {
                 tierLabel: currentTierLabel,
                 modelName: currentModelName,
                 fallbackReason: currentFallbackReason,
+                rerouted: currentRerouted,
+                originalTier: currentOriginalTier,
               }
             } else {
               updated.push({
@@ -220,6 +287,8 @@ export default function Chat() {
                 tierLabel: currentTierLabel,
                 modelName: currentModelName,
                 fallbackReason: currentFallbackReason,
+                rerouted: currentRerouted,
+                originalTier: currentOriginalTier,
                 timestamp: Date.now(),
               })
             }
@@ -228,6 +297,14 @@ export default function Chat() {
         }
       }
     } catch (err) {
+      // Remove the partial assistant message (if any) — it's incomplete and
+      // sending it would confuse the model on the next turn.
+      setMessages(prev => {
+        const updated = [...prev]
+        const last = updated.at(-1)
+        if (last && last.role === "assistant") updated.pop()
+        return updated
+      })
       if (err instanceof ApiError) {
         console.error("Chat API error:", err.status, err.detail)
         setError(`Error (${err.status}): ${err.detail}`)
@@ -371,7 +448,7 @@ export default function Chat() {
           <div className="mt-3 flex items-center gap-2">
             <KeyRound className="h-4 w-4 shrink-0 text-brand-muted" />
             <Input
-              placeholder="Paste virtual key (lmr-...)"
+              placeholder="Paste virtual key (clr-...)"
               value={manualKey}
               onChange={(e) => setManualKey(e.target.value)}
               className="font-mono text-sm flex-1"
@@ -444,7 +521,12 @@ export default function Chat() {
                         >
                           <Badge
                             variant="outline"
-                            className="cursor-pointer text-[10px] uppercase tracking-wider hover:bg-brand-border/50"
+                            className={cn(
+                              "cursor-pointer text-[10px] uppercase tracking-wider",
+                              msg.rerouted
+                                ? "border-yellow-500/40 text-yellow-600 hover:bg-yellow-500/10"
+                                : "hover:bg-brand-border/50",
+                            )}
                           >
                             {msg.tierLabel === "weak" ? (
                               <Zap className="mr-1 h-3 w-3" />
@@ -453,7 +535,11 @@ export default function Chat() {
                             ) : (
                               <Sparkles className="mr-1 h-3 w-3" />
                             )}
-                            {msg.tierLabel}
+                            {msg.rerouted && msg.originalTier ? (
+                              <span>{msg.originalTier} → {msg.tierLabel}</span>
+                            ) : (
+                              <span>{msg.tierLabel}</span>
+                            )}
                             {msg.modelName && (
                               <span className="ml-1 font-mono normal-case">
                                 · {msg.modelName}

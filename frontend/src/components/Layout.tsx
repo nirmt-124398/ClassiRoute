@@ -55,7 +55,7 @@ export default function Layout() {
 
   if (!user) return null
 
-  const pageTitle = pageTitles[location.pathname] ?? "sefaRoute"
+  const pageTitle = pageTitles[location.pathname] ?? "ClassiRoute"
 
   return (
     <div className="flex h-screen bg-brand-bg">
@@ -74,10 +74,10 @@ export default function Layout() {
       >
         <div className="flex h-16 items-center gap-2 px-6">
           <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-brand-bg text-[10px] font-bold tracking-widest text-white font-heading">
-            S
+            C
           </div>
           <span className="font-heading text-lg font-semibold text-brand-text tracking-tight">
-            sefaRoute
+            ClassiRoute
           </span>
         </div>
 
@@ -115,7 +115,7 @@ export default function Layout() {
 
         <div className="p-4">
           <p className="text-xs text-brand-muted font-body">
-            sefaRoute Admin
+            ClassiRoute Admin
           </p>
         </div>
       </aside>

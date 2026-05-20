@@ -192,7 +192,7 @@ async def _log(
                 input_tokens=usage.get("input_tokens"),
                 output_tokens=usage.get("output_tokens"),
                 latency_ms=latency_ms,
-                cost_estimate_usd=_estimate_cost(model_name, usage),
+                cost_estimate_usd=_estimate_cost(routing["tier"], usage),
                 status=status,
                 error_message=error_msg,
             )
@@ -219,6 +219,14 @@ async def _log(
     )
 
 
-def _estimate_cost(model: str, usage: dict) -> float:
+def _estimate_cost(tier: int, usage: dict) -> float:
+    """Estimate cost per tier ($/token)."""
+    # Per-token rates for each tier
+    TIER_RATES = {
+        0: 0.15 / 1_000_000,   # weak:   $0.15/M tokens
+        1: 0.50 / 1_000_000,   # mid:    $0.50/M tokens
+        2: 3.00 / 1_000_000,   # strong: $3.00/M tokens
+    }
+    rate = TIER_RATES.get(tier, 0.15 / 1_000_000)
     total_tokens = (usage.get("input_tokens") or 0) + (usage.get("output_tokens") or 0)
-    return round(total_tokens * 0.000002, 6)
+    return round(total_tokens * rate, 6)

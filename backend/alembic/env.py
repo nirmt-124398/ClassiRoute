@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 from logging.config import fileConfig
 
 from dotenv import load_dotenv
@@ -27,9 +28,10 @@ def get_url() -> str:
     raw_url = os.getenv("DATABASE_URL")
     if raw_url:
         if raw_url.startswith("postgres://"):
-            return raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
+            raw_url = raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
         if raw_url.startswith("postgresql://") and "+asyncpg" not in raw_url:
-            return raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            raw_url = raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        raw_url = re.sub(r"(?i)[?&]sslmode=[^&]*", "", raw_url).replace("?&", "?").rstrip("?")
         return raw_url
     return "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 

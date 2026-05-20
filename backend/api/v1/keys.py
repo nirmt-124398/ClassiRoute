@@ -1,3 +1,4 @@
+import asyncio
 import re
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,6 +12,52 @@ from db.models import User
 from db import crud
 
 router = APIRouter(dependencies=[Depends(rate_limit_api)])
+
+PROVIDER_CHECK_TIMEOUT = 10.0
+
+
+async def verify_provider(
+    model: str,
+    api_key: str,
+    base_url: str,
+    tier_label: str,
+) -> str | None:
+    """Check that a model exists by listing models from the provider.
+
+    Returns ``None`` on success, or an error message string on failure.
+    """
+    headers = {"Authorization": f"Bearer {api_key}"}
+    url = base_url.rstrip("/") + "/models"
+
+    try:
+        async with httpx.AsyncClient(timeout=PROVIDER_CHECK_TIMEOUT) as client:
+            resp = await client.get(url, headers=headers)
+    except httpx.TimeoutException:
+        return f"{tier_label}: Connection timed out — check the base URL"
+    except httpx.RequestError as e:
+        return f"{tier_label}: Cannot reach provider — {e}"
+
+    if resp.status_code == 401:
+        return f"{tier_label}: Invalid API key (401 Unauthorized)"
+    if resp.status_code == 404:
+        return f"{tier_label}: Endpoint not found (404) — check the base URL"
+    if resp.status_code >= 500:
+        return f"{tier_label}: Provider error ({resp.status_code})"
+
+    if resp.status_code != 200:
+        return f"{tier_label}: Unexpected response ({resp.status_code})"
+
+    data = resp.json()
+    model_ids = {
+        m["id"]
+        for m in data.get("data", [])
+        if isinstance(m, dict) and "id" in m
+    }
+
+    if model not in model_ids:
+        return f"{tier_label}: Model '{model}' not found. Available: {', '.join(sorted(model_ids)[:10])}{'...' if len(model_ids) > 10 else ''}"
+
+    return None  # success
 
 class KeyCreateRequest(BaseModel):
     name: str = Field(min_length=1)
@@ -91,6 +138,23 @@ async def create_key(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    # --- Validate all three providers before creating the key ---
+    checks = await asyncio.gather(
+        verify_provider(payload.weak_model, payload.weak_api_key, payload.weak_base_url, "Weak tier"),
+        verify_provider(payload.mid_model, payload.mid_api_key, payload.mid_base_url, "Mid tier"),
+        verify_provider(payload.strong_model, payload.strong_api_key, payload.strong_base_url, "Strong tier"),
+    )
+
+    errors = [e for e in checks if e is not None]
+    if errors:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "One or more providers are unreachable. Key not created.",
+                "errors": errors,
+            },
+        )
+
     key_obj, raw_key = await crud.create_virtual_key(
         db,
         user_id=current_user.id,

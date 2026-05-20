@@ -33,7 +33,7 @@ async def test_keys_create_list_revoke_delete_roundtrip(jwt_headers, encryption_
     key_id = created.response_json.get("key_id")
     raw_key = created.response_json.get("key")
     assert key_id
-    assert raw_key and raw_key.startswith("lmr-")
+    assert raw_key and raw_key.startswith("clr-")
 
     listed = await api_call(client, "GET", "/keys/list", headers=jwt_headers)
     assert listed.status_code == 200

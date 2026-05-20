@@ -1,6 +1,6 @@
 # Implementation Guide — Payments & Billing
 
-> This guide covers what you'd need to implement if you ever want to charge for SafeRoute usage. For now the project is a hobby — this is a reference for later.
+> This guide covers what you'd need to implement if you ever want to charge for ClassiRoute usage. For now the project is a hobby — this is a reference for later.
 
 ## Architecture Overview
 
@@ -141,7 +141,7 @@ Since the project uses `Base.metadata.create_all` (no Alembic):
 ```bash
 # 1. Add models to db/models.py
 # 2. Run ALTER TABLE / CREATE TABLE manually:
-PGPASSWORD=saferoute psql -h localhost -U postgres -d saferoute -f scripts/migration_001_billing.sql
+PGPASSWORD=classiroute psql -h localhost -U postgres -d classiroute -f scripts/migration_001_billing.sql
 
 # 3. Or run a Python migration script that executes raw SQL:
 python -m scripts.migrate_billing

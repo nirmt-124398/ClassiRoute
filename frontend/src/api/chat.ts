@@ -33,6 +33,8 @@ export interface ChatResponse {
     upgraded: boolean
     rerouted: boolean
     fallback_reason?: string
+    original_tier?: number
+    original_tier_name?: string
   }
 }
 
@@ -54,6 +56,8 @@ export interface ChatChunk {
     upgraded: boolean
     rerouted: boolean
     fallback_reason?: string
+    original_tier?: number
+    original_tier_name?: string
   }
 }
 

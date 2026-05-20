@@ -155,7 +155,18 @@ export default function Keys() {
       setForm(defaultForm)
       fetchKeys()
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : "Failed to create key")
+      if (err instanceof ApiError && typeof err.detail === "object" && err.detail !== null) {
+        const d = err.detail as { message?: string; errors?: string[] }
+        if (d.errors && d.errors.length > 0) {
+          setFormError(d.errors.join("\n"))
+        } else if (d.message) {
+          setFormError(d.message)
+        } else {
+          setFormError("Failed to create key")
+        }
+      } else {
+        setFormError(err instanceof Error ? err.message : "Failed to create key")
+      }
     } finally {
       setSubmitting(false)
     }
@@ -290,7 +301,7 @@ export default function Keys() {
             ) : (
               <form onSubmit={handleCreate} className="space-y-4">
                 {formError && (
-                  <div className="rounded-sm border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 font-body">
+                  <div className="rounded-sm border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 font-body whitespace-pre-wrap">
                     {formError}
                   </div>
                 )}

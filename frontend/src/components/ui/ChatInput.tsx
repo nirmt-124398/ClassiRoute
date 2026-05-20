@@ -56,9 +56,8 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             onKeyDown={handleKeyDown}
             rows={1}
             className={cn(
-              "w-full resize-none rounded-sm border bg-brand-surface pr-12 text-sm font-body text-brand-text placeholder:text-brand-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/50 disabled:cursor-not-allowed disabled:opacity-50",
-              "min-h-[40px]",
-              "border-brand-border",
+              "w-full resize-none rounded-sm border border-brand-border bg-brand-surface px-3 py-2.5 pr-12 text-sm font-body text-brand-text placeholder:text-brand-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/50 disabled:cursor-not-allowed disabled:opacity-50",
+              "min-h-[44px]",
               className,
             )}
             {...props}
@@ -69,12 +68,12 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             variant="default"
             disabled={!canSend}
             onClick={onSend}
-            className="absolute bottom-1.5 right-1.5 h-7 w-7"
+            className="absolute bottom-2 right-2 h-7 w-7"
           >
             <Send className="h-3.5 w-3.5" />
           </Button>
         </div>
-        <span className="mt-1 text-xs text-brand-muted font-body">
+        <span className="mt-1.5 text-[11px] text-brand-muted/60 font-body">
           Enter to send · Shift+Enter for new line
         </span>
       </div>

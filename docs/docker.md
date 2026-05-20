@@ -1,4 +1,4 @@
-# Docker — SafeRoute
+# Docker — ClassiRoute
 
 ## Files
 
@@ -15,23 +15,23 @@
 ### Build
 
 ```bash
-docker build -t saferoute-app:latest .
+docker build -t classiroute-app:latest .
 ```
 
 ### Run (dev — one-off)
 
 ```bash
 # Start PG first
-docker run -d --name saferoute-db \
+docker run -d --name classiroute-db \
   -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=saferoute \
-  -e POSTGRES_DB=saferoute \
+  -e POSTGRES_PASSWORD=classiroute \
+  -e POSTGRES_DB=classiroute \
   -p 5432:5432 \
   postgres:16-alpine
 
 # Start app
-docker run -d --name saferoute-app \
-  -e DATABASE_URL=postgresql://postgres:saferoute@host.docker.internal:5432/saferoute \
+docker run -d --name classiroute-app \
+  -e DATABASE_URL=postgresql://postgres:classiroute@host.docker.internal:5432/classiroute \
   -e DB_SCHEMA=public \
   -e JWT_SECRET="<your-secret>" \
   -e JWT_ALGORITHM=HS256 \
@@ -39,7 +39,7 @@ docker run -d --name saferoute-app \
   -e ENCRYPTION_KEY="<your-fernet-key>" \
   -e APP_ENV=development \
   -p 8000:8000 \
-  saferoute-app:latest
+  classiroute-app:latest
 ```
 
 ### Run (recommended — compose)
@@ -64,22 +64,22 @@ docker compose up -d     # restart with new image
 
 ```bash
 # Tag for your registry
-docker tag saferoute-app:latest ghcr.io/<org>/saferoute-app:latest
-docker tag saferoute-app:latest ghcr.io/<org>/saferoute-app:v1.0.0
+docker tag classiroute-app:latest ghcr.io/<org>/classiroute-app:latest
+docker tag classiroute-app:latest ghcr.io/<org>/classiroute-app:v1.0.0
 
 # Push
-docker push ghcr.io/<org>/saferoute-app:latest
-docker push ghcr.io/<org>/saferoute-app:v1.0.0
+docker push ghcr.io/<org>/classiroute-app:latest
+docker push ghcr.io/<org>/classiroute-app:v1.0.0
 
 # On server (pull + run)
-docker pull ghcr.io/<org>/saferoute-app:latest
+docker pull ghcr.io/<org>/classiroute-app:latest
 docker compose -f docker-compose.yml up -d
 
 # Or via docker stack / swarm
-docker stack deploy -c docker-compose.yml saferoute
+docker stack deploy -c docker-compose.yml classiroute
 ```
 
-Registries: Docker Hub (`docker.io/<user>/saferoute-app`), GitHub Container Registry (`ghcr.io/<org>/saferoute-app`), AWS ECR, GCP Artifact Registry.
+Registries: Docker Hub (`docker.io/<user>/classiroute-app`), GitHub Container Registry (`ghcr.io/<org>/classiroute-app`), AWS ECR, GCP Artifact Registry.
 
 ### Health check
 

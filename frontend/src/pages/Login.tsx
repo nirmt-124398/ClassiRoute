@@ -40,10 +40,10 @@ export default function Login() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-brand-dark text-sm font-bold tracking-widest text-white font-heading">
-            S
+            C
           </div>
           <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your sefaRoute account</CardDescription>
+          <CardDescription>Sign in to your ClassiRoute account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

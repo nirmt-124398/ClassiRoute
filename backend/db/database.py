@@ -126,7 +126,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         logger.error("Request failed with DB connection error: %s", exc)
         raise
     finally:
-        await session.close()
+        try:
+            await session.close()
+        except sa_exc.InterfaceError:
+            logger.debug("Connection already closed during session cleanup")
 
 
 async def get_db_standalone() -> AsyncSession:

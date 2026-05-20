@@ -1,7 +1,7 @@
 [project]
-name = "saferoute-app"
+name = "classiroute-app"
 version = "0.1.0"
-description = "LLM routing gateway with analytics and key management"
+description = "ML-powered LLM routing gateway — classify and route prompts to the optimal model"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

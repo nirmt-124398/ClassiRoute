@@ -45,13 +45,13 @@ async def get_virtual_key(
     db: AsyncSession = Depends(get_db)
 ) -> VirtualKey:
     """
-    Validates API requests using the lmr-xxx format.
+    Validates API requests using the clr-xxx format.
     Used ONLY for the /v1/chat/completions route.
     """
-    if not authorization.startswith("Bearer lmr-"):
+    if not authorization.startswith("Bearer clr-"):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API key format. Expected 'Bearer lmr-...'",
+            detail="Invalid API key format. Expected 'Bearer clr-...'",
             headers={"WWW-Authenticate": "Bearer"},
         )
         

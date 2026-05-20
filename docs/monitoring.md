@@ -3,7 +3,7 @@
 | Dashboard | Link |
 |-----------|------|
 | PostHog | <https://us.posthog.com/project/420037/activity/explore> |
-| Sentry | <https://nothing-7b.sentry.io/projects/saferoute-fastapi/?project=4511375196749824> |
+| Sentry | <https://nothing-7b.sentry.io/projects/classiroute-api/?project=4511375196749824> |
 
 ## Overview
 
