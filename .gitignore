@@ -17,3 +17,6 @@ backend/__pycache__/
 backend/.venv/
 backend/*.egg-info/
 backend/wheels/
+
+# Secrets
+keys.txt
