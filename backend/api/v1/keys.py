@@ -1,9 +1,11 @@
 import asyncio
 import re
+from typing import Optional
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from core.dependencies import rate_limit_api
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dependencies import get_current_user
@@ -19,13 +21,21 @@ PROVIDER_CHECK_TIMEOUT = 10.0
 async def verify_provider(
     model: str,
     api_key: str,
-    base_url: str,
+    base_url: Optional[str],
     tier_label: str,
+    provider_type: str = "openai",
 ) -> str | None:
     """Check that a model exists by listing models from the provider.
 
+    Only validates against the /models endpoint for OpenAI-compatible providers.
+    Anthropic and Gemini keys are validated by their own dedicated endpoints.
     Returns ``None`` on success, or an error message string on failure.
     """
+    if provider_type != "openai":
+        return None
+    if base_url is None:
+        return None  # provider doesn't use OpenAI-compatible URL — skip check
+
     headers = {"Authorization": f"Bearer {api_key}"}
     url = base_url.rstrip("/") + "/models"
 
@@ -63,13 +73,27 @@ class KeyCreateRequest(BaseModel):
     name: str = Field(min_length=1)
     weak_model: str = Field(min_length=1)
     weak_api_key: str = Field(min_length=1)
-    weak_base_url: str = Field(min_length=1)
+    weak_base_url: Optional[str] = None
+    weak_provider_type: str = "openai"
     mid_model: str = Field(min_length=1)
     mid_api_key: str = Field(min_length=1)
-    mid_base_url: str = Field(min_length=1)
+    mid_base_url: Optional[str] = None
+    mid_provider_type: str = "openai"
     strong_model: str = Field(min_length=1)
     strong_api_key: str = Field(min_length=1)
-    strong_base_url: str = Field(min_length=1)
+    strong_base_url: Optional[str] = None
+    strong_provider_type: str = "openai"
+
+    @model_validator(mode="after")
+    def validate_provider_urls(self):
+        for tier in ("weak", "mid", "strong"):
+            provider = getattr(self, f"{tier}_provider_type")
+            base_url = getattr(self, f"{tier}_base_url")
+            if provider == "openai" and not base_url:
+                raise ValueError(
+                    f"{tier}_base_url is required when {tier}_provider_type is 'openai'"
+                )
+        return self
 
 class KeyCreateResponse(BaseModel):
     key: str
@@ -140,9 +164,9 @@ async def create_key(
 ):
     # --- Validate all three providers before creating the key ---
     checks = await asyncio.gather(
-        verify_provider(payload.weak_model, payload.weak_api_key, payload.weak_base_url, "Weak tier"),
-        verify_provider(payload.mid_model, payload.mid_api_key, payload.mid_base_url, "Mid tier"),
-        verify_provider(payload.strong_model, payload.strong_api_key, payload.strong_base_url, "Strong tier"),
+        verify_provider(payload.weak_model, payload.weak_api_key, payload.weak_base_url, "Weak tier", payload.weak_provider_type),
+        verify_provider(payload.mid_model, payload.mid_api_key, payload.mid_base_url, "Mid tier", payload.mid_provider_type),
+        verify_provider(payload.strong_model, payload.strong_api_key, payload.strong_base_url, "Strong tier", payload.strong_provider_type),
     )
 
     errors = [e for e in checks if e is not None]
@@ -161,13 +185,16 @@ async def create_key(
         name=payload.name,
         weak_model=payload.weak_model,
         weak_api_key=payload.weak_api_key,
-        weak_base_url=payload.weak_base_url,
         mid_model=payload.mid_model,
         mid_api_key=payload.mid_api_key,
-        mid_base_url=payload.mid_base_url,
         strong_model=payload.strong_model,
         strong_api_key=payload.strong_api_key,
+        weak_base_url=payload.weak_base_url,
+        mid_base_url=payload.mid_base_url,
         strong_base_url=payload.strong_base_url,
+        weak_provider_type=payload.weak_provider_type,
+        mid_provider_type=payload.mid_provider_type,
+        strong_provider_type=payload.strong_provider_type,
     )
 
     return {

@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { listKeys, createKey, revokeKey, listNvidiaModels, type VirtualKey, type CreateKeyPayload } from "@/api/keys"
+import {
+  listKeys,
+  createKey,
+  revokeKey,
+  listNvidiaModels,
+  listAnthropicModels,
+  listGeminiModels,
+  type VirtualKey,
+  type CreateKeyPayload,
+} from "@/api/keys"
 import { ApiError } from "@/api/client"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/Button"
@@ -35,21 +44,32 @@ import { useToast } from "@/components/ui/Toast"
 import { SkeletonTable } from "@/components/ui/Skeleton"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { ErrorState } from "@/components/ui/ErrorState"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs"
+import { Separator } from "@/components/ui/Separator"
 import { Key, Plus, Copy, Check, Trash2, Loader2 } from "lucide-react"
 
 const DEFAULT_NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+
+const PROVIDER_OPTIONS = [
+  { value: "openai", label: "OpenAI-compatible" },
+  { value: "anthropic", label: "Anthropic" },
+  { value: "gemini", label: "Gemini" },
+] as const
 
 const defaultForm: CreateKeyPayload = {
   name: "",
   weak_model: "",
   weak_api_key: "",
   weak_base_url: "",
+  weak_provider_type: "openai",
   mid_model: "",
   mid_api_key: "",
   mid_base_url: "",
+  mid_provider_type: "openai",
   strong_model: "",
   strong_api_key: "",
   strong_base_url: "",
+  strong_provider_type: "openai",
 }
 
 export default function Keys() {
@@ -71,6 +91,8 @@ export default function Keys() {
   const [nvidiaApiKey, setNvidiaApiKey] = useState("")
   const [nvidiaBaseUrl, setNvidiaBaseUrl] = useState(DEFAULT_NVIDIA_BASE_URL)
   const [nvidiaModels, setNvidiaModels] = useState<string[]>([])
+  const [anthropicModels, setAnthropicModels] = useState<string[]>([])
+  const [geminiModels, setGeminiModels] = useState<string[]>([])
   const [loadingModels, setLoadingModels] = useState(false)
   const [modelsError, setModelsError] = useState("")
 
@@ -116,13 +138,39 @@ export default function Keys() {
         ...prev,
         weak_api_key: nvidiaApiKey,
         weak_base_url: nvidiaBaseUrl,
+        weak_provider_type: "openai",
         mid_api_key: nvidiaApiKey,
         mid_base_url: nvidiaBaseUrl,
+        mid_provider_type: "openai",
         strong_api_key: nvidiaApiKey,
         strong_base_url: nvidiaBaseUrl,
+        strong_provider_type: "openai",
       }))
     } catch (err: unknown) {
       setModelsError(err instanceof Error ? err.message : "Failed to load models")
+    } finally {
+      setLoadingModels(false)
+    }
+  }
+
+  async function loadProviderModels(provider: "anthropic" | "gemini", apiKey: string) {
+    if (!apiKey) return
+    setLoadingModels(true)
+    setModelsError("")
+    try {
+      if (provider === "anthropic") {
+        const result = await listAnthropicModels({ api_key: apiKey })
+        setAnthropicModels(result.models)
+      } else {
+        const result = await listGeminiModels({ api_key: apiKey })
+        setGeminiModels(result.models)
+      }
+    } catch (err: unknown) {
+      setModelsError(
+        err instanceof Error
+          ? err.message
+          : `Failed to load ${provider === "anthropic" ? "Anthropic" : "Gemini"} models`,
+      )
     } finally {
       setLoadingModels(false)
     }
@@ -137,6 +185,10 @@ export default function Keys() {
     }
     if (!form.weak_model || !form.mid_model || !form.strong_model) {
       setFormError("Please select a model for each tier.")
+      return
+    }
+    if (!form.weak_api_key || !form.mid_api_key || !form.strong_api_key) {
+      setFormError("Please provide an API key for each tier.")
       return
     }
     setSubmitting(true)
@@ -208,11 +260,114 @@ export default function Keys() {
     setNvidiaApiKey("")
     setNvidiaBaseUrl(DEFAULT_NVIDIA_BASE_URL)
     setNvidiaModels([])
+    setAnthropicModels([])
+    setGeminiModels([])
     setModelsError("")
   }
 
   function updateField(field: keyof CreateKeyPayload, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function renderTierSection(tierPrefix: "weak" | "mid" | "strong") {
+    const providerType = form[`${tierPrefix}_provider_type`] ?? "openai"
+    const knownModels =
+      providerType === "anthropic"
+        ? anthropicModels
+        : providerType === "gemini"
+          ? geminiModels
+          : providerType === "openai"
+            ? nvidiaModels
+            : undefined
+    const isOpenAI = providerType === "openai"
+
+    const modelField = `${tierPrefix}_model` as keyof CreateKeyPayload
+    const apiKeyField = `${tierPrefix}_api_key` as keyof CreateKeyPayload
+    const baseUrlField = `${tierPrefix}_base_url` as keyof CreateKeyPayload
+    const providerField = `${tierPrefix}_provider_type` as keyof CreateKeyPayload
+
+    return (
+      <div className="space-y-3">
+        <Select
+          value={providerType}
+          onValueChange={(val) => updateField(providerField, val)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select provider" />
+          </SelectTrigger>
+          <SelectContent>
+            {PROVIDER_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {knownModels && knownModels.length > 0 ? (
+          <Select
+            value={form[modelField]}
+            onValueChange={(val) => updateField(modelField, val)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a model" />
+            </SelectTrigger>
+            <SelectContent>
+              {knownModels.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Input
+            id={`${tierPrefix}-model`}
+            label="Model"
+            placeholder="Type a model name or load models above"
+            value={form[modelField]}
+            onChange={(e) => updateField(modelField, e.target.value)}
+          />
+        )}
+
+        <Input
+          id={`${tierPrefix}-api-key`}
+          label="API Key"
+          type="password"
+          placeholder={
+            isOpenAI ? "sk-..." : providerType === "anthropic" ? "sk-ant-..." : "AIza..."
+          }
+          value={form[apiKeyField]}
+          onChange={(e) => updateField(apiKeyField, e.target.value)}
+        />
+        {(providerType === "anthropic" || providerType === "gemini") && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => loadProviderModels(providerType, form[apiKeyField] ?? "")}
+            disabled={!form[apiKeyField] || loadingModels}
+          >
+            {loadingModels ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading models...
+              </span>
+            ) : (
+              `Load ${providerType === "anthropic" ? "Anthropic" : "Gemini"} models`
+            )}
+          </Button>
+        )}
+
+        {isOpenAI && (
+          <Input
+            id={`${tierPrefix}-base-url`}
+            label="Base URL"
+            placeholder="https://api.openai.com/v1"
+            value={form[baseUrlField]}
+            onChange={(e) => updateField(baseUrlField, e.target.value)}
+          />
+        )}
+      </div>
+    )
   }
 
   if (loading) {
@@ -314,9 +469,17 @@ export default function Keys() {
                   onChange={(e) => updateField("name", e.target.value)}
                 />
 
-                <div className="rounded-sm border border-brand-border p-3 space-y-3">
-                  <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
-                    NVIDIA NIM Credentials
+                <div className="rounded-sm border border-brand-border bg-brand-surface/30 p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
+                      NVIDIA NIM Credentials
+                    </p>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      Quick-fill
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-brand-muted font-body">
+                    Fill in once to auto-populate all three tiers with OpenAI-compatible settings.
                   </p>
 
                   <Input
@@ -369,78 +532,39 @@ export default function Keys() {
                   )}
                 </div>
 
-                {nvidiaModels.length > 0 && (
-                  <>
-                    <div className="space-y-1">
-                      <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
-                        Weak Tier
-                      </p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Select
-                          value={form.weak_model}
-                          onValueChange={(val) => updateField("weak_model", val)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a model" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {nvidiaModels.map((m) => (
-                              <SelectItem key={m} value={m}>
-                                {m}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+                <Separator />
 
-                    <div className="space-y-1">
-                      <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
-                        Mid Tier
-                      </p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Select
-                          value={form.mid_model}
-                          onValueChange={(val) => updateField("mid_model", val)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a model" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {nvidiaModels.map((m) => (
-                              <SelectItem key={m} value={m}>
-                                {m}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-xs font-heading font-medium uppercase tracking-wider text-brand-muted">
-                        Strong Tier
-                      </p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Select
-                          value={form.strong_model}
-                          onValueChange={(val) => updateField("strong_model", val)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a model" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {nvidiaModels.map((m) => (
-                              <SelectItem key={m} value={m}>
-                                {m}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </>
-                )}
+                <Tabs defaultValue="weak" className="w-full">
+                  <TabsList className="w-full grid grid-cols-3">
+                    <TabsTrigger value="weak">
+                      Weak
+                      {form.weak_model && form.weak_api_key && (
+                        <span className="ml-1.5 text-brand-green">✓</span>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="mid">
+                      Mid
+                      {form.mid_model && form.mid_api_key && (
+                        <span className="ml-1.5 text-brand-green">✓</span>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="strong">
+                      Strong
+                      {form.strong_model && form.strong_api_key && (
+                        <span className="ml-1.5 text-brand-green">✓</span>
+                      )}
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="weak" className="space-y-3">
+                    {renderTierSection("weak")}
+                  </TabsContent>
+                  <TabsContent value="mid" className="space-y-3">
+                    {renderTierSection("mid")}
+                  </TabsContent>
+                  <TabsContent value="strong" className="space-y-3">
+                    {renderTierSection("strong")}
+                  </TabsContent>
+                </Tabs>
 
                 <div className="flex justify-end gap-2 pt-2">
                   <Button
@@ -452,7 +576,7 @@ export default function Keys() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={submitting || nvidiaModels.length === 0}
+                    disabled={submitting}
                   >
                     {submitting ? "Creating…" : "Create Key"}
                   </Button>

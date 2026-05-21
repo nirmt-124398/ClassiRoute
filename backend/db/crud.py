@@ -41,9 +41,15 @@ async def create_virtual_key(
     db: AsyncSession,
     user_id: str,
     name: str,
-    weak_model: str, weak_api_key: str, weak_base_url: str,
-    mid_model: str, mid_api_key: str, mid_base_url: str,
-    strong_model: str, strong_api_key: str, strong_base_url: str,
+    weak_model: str, weak_api_key: str,
+    mid_model: str, mid_api_key: str,
+    strong_model: str, strong_api_key: str,
+    weak_base_url: str | None = None,
+    mid_base_url: str | None = None,
+    strong_base_url: str | None = None,
+    weak_provider_type: str = "openai",
+    mid_provider_type: str = "openai",
+    strong_provider_type: str = "openai",
 ) -> tuple[VirtualKey, str]:
     raw_key = f"clr-{secrets.token_hex(32)}"
     hashed_key = hash_key(raw_key)
@@ -55,12 +61,15 @@ async def create_virtual_key(
         weak_model=weak_model,
         weak_api_key=encrypt(weak_api_key),
         weak_base_url=weak_base_url,
+        weak_provider_type=weak_provider_type,
         mid_model=mid_model,
         mid_api_key=encrypt(mid_api_key),
         mid_base_url=mid_base_url,
+        mid_provider_type=mid_provider_type,
         strong_model=strong_model,
         strong_api_key=encrypt(strong_api_key),
         strong_base_url=strong_base_url,
+        strong_provider_type=strong_provider_type,
     )
     db.add(new_key)
     await db.commit()

@@ -24,15 +24,18 @@ class VirtualKey(Base):
     
     weak_model = Column(String, nullable=False)
     weak_api_key = Column(String, nullable=False)
-    weak_base_url = Column(String, nullable=False)
+    weak_base_url = Column(String, nullable=True)
+    weak_provider_type = Column(String(20), nullable=False, default="openai")
     
     mid_model = Column(String, nullable=False)
     mid_api_key = Column(String, nullable=False)
-    mid_base_url = Column(String, nullable=False)
+    mid_base_url = Column(String, nullable=True)
+    mid_provider_type = Column(String(20), nullable=False, default="openai")
     
     strong_model = Column(String, nullable=False)
     strong_api_key = Column(String, nullable=False)
-    strong_base_url = Column(String, nullable=False)
+    strong_base_url = Column(String, nullable=True)
+    strong_provider_type = Column(String(20), nullable=False, default="openai")
     
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())

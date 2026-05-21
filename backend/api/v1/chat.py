@@ -71,18 +71,18 @@ async def chat_completions(
                             routing["fallback_reason"] = f"Tier {original_tier} ({TIER_NAMES.get(original_tier, 'unknown')}) failed, cascaded to tier {attempt}"
                         first = True
                         async for chunk in stream_obj:
-                            if chunk.usage is not None:
+                            if chunk.get("usage"):
                                 usage = {
-                                    "input_tokens": chunk.usage.prompt_tokens,
-                                    "output_tokens": chunk.usage.completion_tokens,
+                                    "input_tokens": chunk["usage"]["prompt_tokens"],
+                                    "output_tokens": chunk["usage"]["completion_tokens"],
                                 }
                             if first:
-                                chunk_dict = chunk.model_dump()
+                                chunk_dict = dict(chunk)
                                 chunk_dict["x-llmrouter"] = routing
                                 yield f"data: {json.dumps(chunk_dict)}\n\n"
                                 first = False
                             else:
-                                yield f"data: {chunk.model_dump_json()}\n\n"
+                                yield f"data: {json.dumps(chunk)}\n\n"
                         yield "data: [DONE]\n\n"
                         break
                     except Exception as e:
@@ -151,13 +151,14 @@ async def chat_completions(
 
     dispatch_ms = int((time.time() - dispatch_start) * 1000)
     latency_ms = int((time.time() - start) * 1000)
-    result = response.model_dump()
+    result = dict(response)
     result["x-llmrouter"] = routing
+    bg_usage = response.get("usage", {})
     background_tasks.add_task(
         _log, virtual_key, prompt, routing, model_used,
         {
-            "input_tokens": response.usage.prompt_tokens if response.usage else None,
-            "output_tokens": response.usage.completion_tokens if response.usage else None,
+            "input_tokens": bg_usage.get("prompt_tokens"),
+            "output_tokens": bg_usage.get("completion_tokens"),
         },
         latency_ms, "success", None, routing_ms, dispatch_ms
     )

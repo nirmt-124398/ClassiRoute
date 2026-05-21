@@ -7,8 +7,14 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.v1 import auth, keys, chat, analytics, users
+from api.v1 import auth, keys, chat, analytics, users, keys_gemini
+from api.v1.keys_anthropic import router as keys_anthropic_router
 from core import router as router_mod
+
+# Register all provider adapters — triggers register_provider() calls
+import core.providers.openai  # noqa: F401
+import core.providers.anthropic  # noqa: F401
+import core.providers.gemini  # noqa: F401
 from services.error_tracking import init_sentry
 from db.database import dispose_engine, check_db_connected
 
@@ -56,7 +62,9 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(keys.router, prefix="/keys", tags=["Keys"])
+app.include_router(keys_gemini.router, prefix="/v1")
 app.include_router(chat.router, prefix="/v1", tags=["Chat"])
+app.include_router(keys_anthropic_router, prefix="/v1")
 app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
 
