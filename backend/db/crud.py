@@ -132,9 +132,12 @@ async def get_stats(db: AsyncSession, user_id: str, key_id: str = None, days: in
     total_requests = len(logs)
     by_tier = {0: 0, 1: 0, 2: 0}
     total_cost_usd = 0.0
+    cost_if_all_strong = 0.0
     total_latency = 0
     success_count = 0
     
+    STRONG_RATE = 3.00 / 1_000_000  # $3.00 per million tokens (tier 2)
+
     requests_by_day_map = {}
 
     for log in logs:
@@ -145,6 +148,9 @@ async def get_stats(db: AsyncSession, user_id: str, key_id: str = None, days: in
         if log.status == "success":
             success_count += 1
 
+        total_tokens = (log.input_tokens or 0) + (log.output_tokens or 0)
+        cost_if_all_strong += total_tokens * STRONG_RATE
+
         if log.created_at:
             day = log.created_at.date().isoformat()
             requests_by_day_map[day] = requests_by_day_map.get(day, 0) + 1
@@ -152,9 +158,7 @@ async def get_stats(db: AsyncSession, user_id: str, key_id: str = None, days: in
     avg_latency_ms = (total_latency / total_requests) if total_requests > 0 else 0
     success_rate = (success_count / total_requests) if total_requests > 0 else 0
 
-    # Mocking cost saved — assumes all requests were routed to tier 2 for worst-case cost
-    # Usually requires knowing tier 2 price per token
-    cost_saved = total_cost_usd * 2.5 # Mock factor as requested by simple analysis
+    cost_saved = cost_if_all_strong - total_cost_usd
 
     requests_by_day = [
         {"date": day, "count": count}

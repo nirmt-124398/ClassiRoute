@@ -1,5 +1,5 @@
 MID:
-- Build a homomorphic encryption library supporting addition and multiplication on encrypted integers. Implement BFV and CKKS schemes. Must be production-ready with constant-time operations to prevent side-channel attacks."
+- Build a homomorphic encryption library supporting addition and multiplication on encrypted integers. Implement BFV and CKKS schemes. Must be production-ready with constant-time operations to prevent side-channel attacks.
 STRONG:
 
 A. Act as an Autonomous Software Factory Orchestrator. Your task is to execute chat-driven development autonomously based on the high-level goals I provide.
