@@ -20,3 +20,8 @@ backend/wheels/
 
 # Secrets
 keys.txt
+
+# Generated files
+graphify-out/
+reports/
+prompts.md

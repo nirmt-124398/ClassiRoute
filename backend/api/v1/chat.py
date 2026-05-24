@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-@router.post("/chat/completions")
+@router.post("/chat/completions", include_in_schema=False)
+@router.post("/chat/completions/")
 async def chat_completions(
     request: Request,
     background_tasks: BackgroundTasks,
