@@ -1,4 +1,4 @@
-import { apiRequest, ApiError } from "./client"
+import { apiRequest, ApiError, BASE_URL } from "./client"
 
 export interface ChatMessage {
   role: "user" | "assistant" | "system"
@@ -84,7 +84,7 @@ export async function* streamChatMessage(
   virtualKey: string,
   messages: ChatMessage[]
 ): AsyncGenerator<ChatChunk | FallbackNotice | StreamError> {
-  const response = await fetch("/v1/chat/completions", {
+  const response = await fetch(`${BASE_URL}/v1/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

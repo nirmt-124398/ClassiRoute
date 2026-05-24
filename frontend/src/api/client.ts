@@ -1,6 +1,6 @@
 // In dev, Vite proxy handles /v1, /auth, /keys, /analytics, /users, /health
 // In production (Vercel), set VITE_API_URL to your Render backend URL
-const BASE_URL = (import.meta as any).env?.VITE_API_URL ?? ""
+export const BASE_URL = (import.meta as any).env?.VITE_API_URL ?? ""
 
 interface RequestOptions {
   method?: string
