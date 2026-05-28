@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.v1 import auth, keys, chat, analytics, users, keys_gemini
+from api.v1 import auth, keys, chat, analytics, users, keys_gemini, evaluate
 from api.v1.keys_anthropic import router as keys_anthropic_router
 from core import router as router_mod
 
@@ -67,6 +67,7 @@ app.include_router(chat.router, prefix="/v1", tags=["Chat"])
 app.include_router(keys_anthropic_router, prefix="/v1")
 app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
+app.include_router(evaluate.router, tags=["Internal"])
 
 
 @app.get("/health")
