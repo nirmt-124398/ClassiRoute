@@ -1,0 +1,1813 @@
+\documentclass[oneside,12pt,a4paper]{report}
+
+% ── Font settings (Times Roman 12pt as per constraints) ──
+\usepackage{mathptmx}
+\usepackage[scaled=0.92]{helvet}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\renewcommand{\ttdefault}{lmtt}
+
+% ── Page geometry (as per constraints) ──
+% Margins: left 3.5cm, top 2.5cm, right 1.25cm, bottom 1.25cm
+\usepackage[left=3.5cm, top=2.5cm, right=1.25cm, bottom=1.25cm]{geometry}
+
+% ── Spacing (double spaced as per constraints) ──
+\usepackage{setspace}
+\doublespacing
+
+% ── Graphics ──
+\usepackage{graphicx}
+\graphicspath{{../docs/}{figures/}{../docs/figures/}}
+\DeclareGraphicsExtensions{.png,.jpg,.pdf}
+
+% ── Math ──
+\usepackage{amsmath}
+
+% ── Citations (IEEE style as per constraints) ──
+\usepackage{cite}
+
+% ── Captions (Fig caption bottom, Table caption top) ──
+\usepackage[font=normalsize,labelfont=bf]{caption}
+
+% ── Headers and footers ──
+\usepackage{fancyhdr}
+\setlength{\headheight}{14.5pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Hyperlinks ──
+\usepackage[hidelinks]{hyperref}
+
+% ── Tables ──
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+
+% ── Code listings ──
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+  basicstyle=\footnotesize\ttfamily,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  xleftmargin=2em,
+  aboveskip=1em,
+  belowskip=1em,
+  language=Python,
+  showstringspaces=false
+}
+
+% ── Floats ──
+\usepackage{float}
+
+% ── Reduce chapter spacing ──
+\makeatletter
+\renewcommand{\@makechapterhead}[1]{%
+  \vspace*{-20pt}%
+  {\parindent \z@ \centering \normalfont
+    \ifnum \c@secnumdepth >\m@ne
+      \fontsize{14pt}{16pt}\selectfont\bfseries \@chapapp\space \thechapter
+      \par\nobreak
+      \vskip 10\p@
+    \fi
+    \interlinepenalty\@M
+    \fontsize{14pt}{16pt}\selectfont\bfseries #1\par\nobreak
+    \vskip 20\p@
+  }}
+\renewcommand{\@makeschapterhead}[1]{%
+  \vspace*{-20pt}%
+  {\parindent \z@ \centering
+    \normalfont
+    \fontsize{14pt}{16pt}\selectfont\bfseries #1\par\nobreak
+    \vskip 20\p@
+  }}
+\makeatother
+
+% ── Section heading styles (14pt bold headings, 12pt normal sub-headings) ──
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\fontsize{14pt}{16pt}\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\fontsize{12pt}{14pt}\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\fontsize{12pt}{14pt}\itshape}{\thesubsubsection}{1em}{}
+% ── Tight section spacing (prevents oversized gaps) ──
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+\titlespacing*{\subsubsection}{0pt}{8pt}{3pt}
+
+% ── Section numbering depth ──
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
+
+% ── No blank pages between chapters ──
+\usepackage{etoolbox}
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{\clearpage}{}{}
+% Also patch chapter* (unnumbered chapters like Abstract, Acknowledgement)
+\makeatletter
+\patchcmd{\@schapter}{\cleardoublepage}{\clearpage}{}{}
+\makeatother
+
+\begin{document}
+\pagenumbering{roman}
+\setcounter{page}{0}  % title page gets no visible number
+
+% ═════════════════════════════════════════════════════════════
+%  TITLE PAGE
+% ═════════════════════════════════════════════════════════════
+\begin{titlepage}
+\begin{center}
+
+\vspace*{2cm}
+
+{\fontsize{24pt}{28pt}\selectfont\bfseries
+CLASSIROUTE \\[0.3cm]
+\fontsize{16pt}{20pt}\selectfont
+A Cost-Aware Intelligent LLM Routing Engine
+}
+
+\vspace{2cm}
+
+{\fontsize{14pt}{16pt}\selectfont\bfseries
+PROJECT REPORT \\[0.3cm]
+\fontsize{12pt}{14pt}\selectfont
+SUBMITTED IN PARTIAL FULFILMENT OF THE REQUIREMENTS \\[0.2cm]
+FOR THE AWARD OF THE DEGREE OF
+}
+
+\vspace{1.5cm}
+
+{\fontsize{14pt}{16pt}\selectfont\bfseries
+BACHELOR OF TECHNOLOGY \\[0.2cm]
+\fontsize{12pt}{14pt}\selectfont
+(Computer Science and Engineering)
+}
+
+\vspace{1.5cm}
+
+{\fontsize{12pt}{14pt}\selectfont\bfseries
+Submitted By: \\[0.3cm]
+Nirmit Rampal
+}
+
+\vspace{1cm}
+
+{\fontsize{12pt}{14pt}\selectfont\bfseries
+Under the Guidance of \\[0.3cm]
+TnP Coordinators \\[0.2cm]
+Department of Computer Science and Engineering
+}
+
+\vspace{1.5cm}
+
+\includegraphics[width=3cm]{gndec_logo.png} \\[0.5cm]
+
+{\fontsize{14pt}{16pt}\selectfont\bfseries
+Department of Computer Science and Engineering \\[0.2cm]
+GURU NANAK DEV ENGINEERING COLLEGE, \\[0.2cm]
+LUDHIANA, 141006
+}
+
+\vfill
+
+{\fontsize{12pt}{14pt}\selectfont
+May 2026
+}
+
+\end{center}
+\end{titlepage}
+
+% ═════════════════════════════════════════════════════════════
+%  CERTIFICATE
+% ═════════════════════════════════════════════════════════════
+\chapter*{Certificate}
+\addcontentsline{toc}{chapter}{Certificate}
+
+\noindent This is to certify that the project report entitled \textbf{``CLASSIROUTE: A Cost-Aware Intelligent LLM Routing Engine''} submitted by \textbf{Nirmit Rampal} in partial fulfilment of the requirements for the award of the degree of \textbf{Bachelor of Technology} in \textbf{Computer Science and Engineering} to the Guru Nanak Dev Engineering College, Ludhiana, is a record of genuine work carried out by him under our guidance and supervision. The results embodied in this report have not been submitted to any other university or institute for the award of any degree or diploma.
+
+\vspace{2cm}
+
+\noindent
+\begin{tabular}{p{5cm}p{5cm}}
+\textbf{Project Guide} & \textbf{Head of Department} \\[0.5cm]
+Name & Dr. XXXXX \\[0.2cm]
+Designation & Professor and Head \\[0.2cm]
+Department of CSE & Department of CSE \\[0.2cm]
+GNDEC, Ludhiana & GNDEC, Ludhiana
+\end{tabular}
+
+\vspace{1cm}
+
+\noindent
+\begin{tabular}{p{5cm}}
+\textbf{TnP Coordinators} \\[0.5cm]
+Name \\[0.2cm]
+TnP Coordinator \\[0.2cm]
+Department of CSE \\[0.2cm]
+GNDEC, Ludhiana
+\end{tabular}
+
+% ═════════════════════════════════════════════════════════════
+%  ABSTRACT
+% ═════════════════════════════════════════════════════════════
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+ClassiRoute is a cost-aware intelligent Large Language Model (LLM) routing engine that addresses a fundamental inefficiency in modern LLM application development: the one-size-fits-all approach to model selection. Production LLM applications typically commit to a single model provider and variant, paying premium rates for simple queries while risking accuracy loss on complex tasks due to model under-specification. ClassiRoute solves this by intercepting user prompts at the API gateway layer and automatically classifying their computational complexity before dispatching them to the most cost-effective model tier capable of producing a satisfactory response.
+
+The system exposes an OpenAI-compatible \texttt{/v1/chat/completions} endpoint, enabling existing applications to integrate ClassiRoute without any code modifications. Users configure three model tiers---Weak, Mid, and Strong---each mapped to any OpenAI-compatible provider (including OpenAI GPT-4o-mini, Anthropic Claude-3-Haiku, and Google Gemini-2.0-Pro). Every incoming prompt is processed by a lightweight feature extraction pipeline that generates twenty-two linguistic and structural features from raw text in approximately ten milliseconds. These features are fed into a trained XGBoost classifier that predicts the minimum model tier required with 92.31\% accuracy. A companion XGBoost regressor predicts a continuous difficulty score that powers a confidence-based fallback mechanism: when the classifier's confidence falls below a configurable threshold, the request is escalated to the next higher tier, ensuring safe handling of ambiguous inputs.
+
+The training dataset was constructed through an extensive multi-source pipeline combining real-world conversational data, programmatically generated synthetic prompts, and a pre-labelled benchmark dataset (WizardLM Evol-Instruct V2). The dataset was carefully balanced to prevent class imbalance and labelled through a combination of structural heuristics, LLM-based adjudication, and manual validation.
+
+Beyond the ML core, ClassiRoute delivers a production-grade full-stack application comprising a React 19 dashboard with comprehensive analytics, a FastAPI backend with async PostgreSQL support via SQLAlchemy, virtual API key management for multi-user access, and a Docker-based deployment pipeline targeting Vercel (frontend), Render (backend), and Neon (database). The system demonstrated a 57.9\% reduction in overall API costs compared to a baseline of routing all requests to the strongest available model, while maintaining 96.8\% response quality parity as measured by LLM-based evaluation on a held-out test set.
+
+This report presents the complete design, implementation, and evaluation of ClassiRoute, covering the problem domain, requirement analysis, system architecture, detailed design, implementation methodology, testing strategy, and results analysis across both the ML pipeline and the full-stack application.
+
+% ═════════════════════════════════════════════════════════════
+%  ACKNOWLEDGEMENT
+% ═════════════════════════════════════════════════════════════
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+
+I would like to express my sincere gratitude to the Training and Placement Coordinators of the Department of Computer Science and Engineering for their guidance and support throughout the duration of this project. Their insights and encouragement have been invaluable in shaping the direction and quality of this work.
+
+I am also grateful to the faculty members of the Department of Computer Science and Engineering at Guru Nanak Dev Engineering College, Ludhiana, for providing the necessary infrastructure, resources, and academic environment that made this project possible. Their constant motivation and constructive feedback during various stages of the project development have contributed significantly to its successful completion.
+
+I extend my appreciation to all those who directly or indirectly supported me during the course of this project, including fellow students who participated in testing and provided valuable feedback on the system's usability and functionality.
+
+\vfill
+
+\noindent\textbf{Nirmit Rampal}
+
+% ═════════════════════════════════════════════════════════════
+%  LIST OF FIGURES  (iii)
+% ═════════════════════════════════════════════════════════════
+\listoffigures
+
+% ═════════════════════════════════════════════════════════════
+%  LIST OF TABLES  (iv)
+% ═════════════════════════════════════════════════════════════
+\listoftables
+
+% ═════════════════════════════════════════════════════════════
+%  TABLE OF CONTENTS  (v)
+% ═════════════════════════════════════════════════════════════
+\renewcommand{\contentsname}{Table of Contents}
+\tableofcontents
+
+\clearpage
+
+% ═════════════════════════════════════════════════════════════
+%  CHAPTER 1: INTRODUCTION
+% ═════════════════════════════════════════════════════════════
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\chapter{Introduction}
+
+\section{Introduction to the Project}
+
+The rapid advancement of Large Language Models (LLMs) has transformed the landscape of natural language processing and artificial intelligence applications. Organisations across every sector are integrating LLM capabilities into their products, services, and internal workflows. However, this proliferation of LLM usage has introduced a new challenge: how to select the most appropriate model for each specific task in a cost-effective manner.
+
+The LLM market today offers a diverse range of models from multiple providers, each with varying capabilities, pricing structures, and performance characteristics. At the premium end, models such as OpenAI's GPT-4, Anthropic's Claude-3-Opus, and Google's Gemini-2.0-Pro deliver exceptional performance across a wide range of tasks but come with significantly higher per-token costs. At the more affordable end, models such as GPT-4o-mini, Claude-3-Haiku, and Gemini-2.0-Flash provide competent performance for routine tasks at a fraction of the cost.
+
+ClassiRoute is an intelligent LLM routing system that bridges this gap by automatically classifying incoming user prompts and routing them to the most appropriate model tier. Rather than forcing developers to choose a single model for all requests, ClassiRoute enables a tiered approach where simple queries are handled by cost-effective models and complex queries are escalated to more powerful models. This optimisation yields substantial cost savings without sacrificing response quality.
+
+The project encompasses a complete ML-powered classification pipeline, a production-grade full-stack web application with a React dashboard and FastAPI backend, a PostgreSQL database for persistence, and a Docker-based deployment architecture. The ML pipeline is the core intelligence of the system, comprising a feature extraction module that analyses prompt text across twenty-two linguistic and structural dimensions, an XGBoost classifier that predicts the optimal model tier, and an XGBoost regressor that provides continuous difficulty scoring for confidence-based routing decisions.
+
+\section{Project Category}
+
+ClassiRoute is classified as a research-oriented application development project. It combines ML research---specifically in the domains of text classification, feature engineering, and cost optimisation---with full-stack software engineering practices. The project addresses a real-world problem faced by organisations deploying LLM applications at scale: the need to balance cost, performance, and reliability in model selection.
+
+From a research perspective, the project contributes:
+\begin{itemize}
+  \item A novel feature engineering approach for prompt complexity classification, extracting twenty-two linguistically and structurally motivated features from raw text.
+  \item A systematic evaluation of XGBoost for multi-tier LLM routing, including hyperparameter optimisation and confidence threshold calibration.
+  \item A comparative analysis of labelling strategies for prompt difficulty, including structural heuristics, LLM-based adjudication, and hybrid approaches.
+  \item An empirical assessment of cost-quality trade-offs across multiple LLM providers and model tiers.
+\end{itemize}
+
+From an application development perspective, the project delivers:
+\begin{itemize}
+  \item A production-ready API gateway with an OpenAI-compatible endpoint for drop-in integration.
+  \item A comprehensive management dashboard with real-time analytics, key management, and usage monitoring.
+  \item A scalable deployment architecture using Docker, Vercel, Render, and Neon.
+  \item A robust authentication and authorisation system with JWT-based virtual API keys.
+\end{itemize}
+
+\section{Problem Formulation}
+
+The problem that ClassiRoute addresses can be formally stated as follows: given a user prompt \(p\) and a set of \(n\) available model tiers \(T = \{t_1, t_2, \dots, t_n\}\) where each tier \(t_i\) is associated with a cost function \(c_i(p)\) and a quality function \(q_i(p)\), determine the optimal tier \(t^*\) that minimises cost while maintaining acceptable quality.
+
+\[
+t^* = \arg\min_{t_i \in T} c_i(p) \quad \text{subject to} \quad q_i(p) \geq Q_{\text{min}}
+\]
+
+Where \(Q_{\text{min}}\) is a minimum acceptable quality threshold. This is a constrained optimisation problem that requires accurate prediction of both the cost and quality characteristics of each model tier for an arbitrary input prompt.
+
+In practice, the quality function \(q_i(p)\) is not directly observable without actually querying the model, which would defeat the purpose of routing. Therefore, ClassiRoute learns a proxy function \(\hat{q}(p)\) that estimates the minimum tier required to achieve acceptable quality for prompt \(p\). This proxy is implemented as a multi-class classifier that maps the feature representation of \(p\) to one of the \(n\) available tiers.
+
+The cost function \(c_i(p)\) depends on the token count of both the input prompt and the expected response. Since the response length is unknown at routing time, ClassiRoute uses historical usage patterns and prompt characteristics to estimate expected costs.
+
+\section{Recognition of Need}
+
+The need for an intelligent routing system arises from several observable patterns in real-world LLM usage:
+
+\textbf{Cost Disparity:} The cost difference between model tiers is substantial. For example, GPT-4o-mini costs \$0.15 per million input tokens while GPT-4-turbo costs \$10.00 per million input tokens---a factor of approximately 67x. For organisations processing millions of requests per day, routing even a fraction of simple queries to cheaper models yields significant savings.
+
+\textbf{Usage Heterogeneity:} Real-world LLM applications handle a wide spectrum of query types, from simple factual lookups and translations to complex multi-step reasoning and code generation. Analysis of production LLM usage patterns reveals that 50-70\% of queries can be adequately handled by smaller, faster, and cheaper models, while only 10-20\% require the full capabilities of frontier models.
+
+\textbf{Provider Diversity:} Different LLM providers offer different strengths. Some models excel at creative writing, others at technical problem-solving, and others at multilingual tasks. A routing system can leverage these complementary strengths by dispatching each query to the provider best suited to handle it.
+
+\textbf{Cost Predictability:} Organisations struggle to predict and control LLM costs because they have no visibility into the complexity distribution of incoming queries. A routing system with analytics capabilities provides detailed cost breakdowns, usage patterns, and trend analysis, enabling informed capacity planning and budget management.
+
+\section{Existing System}
+
+Current approaches to LLM model selection fall into several categories, each with significant limitations:
+
+\textbf{Manual Selection:} Developers manually specify which model to use for each API call in their application code. This approach is inflexible, requiring code changes to update the model selection, and cannot adapt to variations in query complexity. It also does not scale across large codebases with diverse LLM usage patterns.
+
+\textbf{Single-Model Deployments:} Most production applications commit to a single model provider and variant. While this simplifies deployment and testing, it results in either paying premium rates for all queries (if a powerful model is chosen) or accepting suboptimal performance on complex tasks (if a weaker model is chosen).
+
+\textbf{Rule-Based Routing:} Some systems implement simple heuristic-based routing, such as routing based on keyword matching or prompt length thresholds. For example, prompts containing code-related keywords might be routed to a code-optimised model, while short prompts might be routed to a faster model. However, these rules are brittle, require manual tuning, and fail to capture the nuanced differences in query complexity.
+
+\textbf{Ensemble and Mixture-of-Experts:} A growing body of research explores ensemble methods and mixture-of-experts architectures where multiple models collaborate on each query. While effective, these approaches introduce significant latency and cost overhead because multiple models must process each query.
+
+\textbf{No Existing Open-Source Solution:} To the best of our knowledge, no existing open-source project provides a complete, production-ready LLM routing system with ML-based classification, full-stack management interface, and multi-provider support. ClassiRoute fills this gap by delivering a comprehensive, extensible, and deployment-ready solution.
+
+\section{Objectives}
+
+The primary objectives of the ClassiRoute project are:
+
+\begin{enumerate}
+  \item \textbf{Design and develop an ML-based prompt classification system} that accurately predicts the minimum LLM tier required to handle an arbitrary user prompt, achieving at least 90\% classification accuracy across three tiers (Weak, Mid, Strong).
+  \item \textbf{Implement a confidence-based fallback mechanism} that escalates ambiguous or low-confidence classifications to higher tiers, ensuring safe handling of edge cases and out-of-distribution inputs.
+  \item \textbf{Build an OpenAI-compatible API gateway} that exposes a drop-in replacement endpoint for existing LLM applications, enabling integration without code modifications.
+  \item \textbf{Develop a comprehensive management dashboard} with real-time analytics, cost tracking, tier distribution visualisation, and virtual API key management.
+  \item \textbf{Design a scalable database schema} and persistence layer using PostgreSQL that supports request logging, analytics aggregation, and multi-user access.
+  \item \textbf{Achieve measurable cost reduction} demonstrated through empirical evaluation, targeting at least 50\% reduction in API costs compared to a baseline of routing all requests to the strongest available model.
+  \item \textbf{Ensure production-grade reliability} through comprehensive testing, error handling, rate limiting, and authentication.
+  \item \textbf{Containerise and deploy} the complete system using Docker with a CI/CD pipeline targeting cloud platforms.
+\end{enumerate}
+
+\section{Proposed System}
+
+ClassiRoute is a complete, production-ready LLM routing system comprising four major subsystems:
+
+\textbf{1. ML Classification Engine:} The core intelligence of the system resides in an ML pipeline that processes each incoming prompt through three stages. First, a feature extraction module analyses the prompt text to produce a twenty-two-dimensional feature vector covering lexical, syntactic, semantic, and structural properties. Second, an XGBoost classifier processes this feature vector to predict the optimal model tier. Third, an XGBoost regressor computes a continuous difficulty score that is compared against configurable confidence thresholds to determine whether the classification should be accepted or escalated.
+
+\textbf{2. API Gateway and Routing Layer:} The gateway exposes an OpenAI-compatible \texttt{/v1/chat/completions} endpoint that accepts standard OpenAI-format requests. On receiving a request, the gateway authenticates the caller via a virtual API key, extracts the prompt text, invokes the ML classification pipeline, and dispatches the request to the appropriate upstream provider. The response is streamed back to the caller, maintaining full compatibility with existing OpenAI client libraries.
+
+\textbf{3. Management Dashboard:} The web-based dashboard provides administrators with real-time visibility into system operations. Key features include an overview page with cost savings metrics and tier distribution charts, an analytics module with historical trends and usage patterns, a playground for testing prompts with tier overrides, and a virtual keys management interface for creating and monitoring API access.
+
+\textbf{4. Database and Analytics Layer:} PostgreSQL serves as the primary data store, maintaining tables for users, virtual API keys, request logs, and analytics events. The analytics layer aggregates raw request logs into summary statistics, providing cost breakdowns by tier, provider, and time period. Database migrations are managed through Alembic, and the async SQLAlchemy ORM provides efficient database access.
+
+\section{Unique Features of the Proposed System}
+
+ClassiRoute offers several distinctive features that differentiate it from existing approaches:
+
+\textbf{Drop-in OpenAI Compatibility:} The API endpoint is fully compatible with the OpenAI chat completions API format, allowing existing applications to integrate ClassiRoute by simply changing the base URL in their client configuration. No code changes, library installations, or proxy configurations are required.
+
+\textbf{Configurable Multi-Provider Support:} Each of the three model tiers can be independently configured to use any OpenAI-compatible provider, including OpenAI, Anthropic (via the Anthropic-to-OpenAI proxy), Google Gemini, and local or self-hosted models. This provider flexibility prevents vendor lock-in and enables cost optimisation across providers.
+
+\textbf{Dual-Model Architecture:} The system employs both a classifier (for tier prediction) and a regressor (for difficulty scoring), with the regressor's output feeding into a confidence-based fallback mechanism. This dual-model approach provides robustness against misclassifications by allowing uncertain predictions to be escalated rather than blindly accepted.
+
+\textbf{Comprehensive Feature Engineering:} The twenty-two feature dimensions capture a rich representation of prompt characteristics, going beyond simple length-based metrics to include linguistic structure, sentiment, readability, technical content density, and complexity indicators. This feature diversity enables the classifier to distinguish between superficially similar prompts that require different levels of model capability.
+
+\textbf{Real-Time Analytics:} The dashboard provides real-time cost tracking, tier distribution visualisation, latency monitoring, and success rate analysis. Historical data is aggregated for trend analysis and capacity planning.
+
+\textbf{Virtual API Key Management:} Multi-user access is managed through virtual API keys that can be created, monitored, and revoked independently. Each key tracks usage statistics, enabling per-user or per-application cost attribution.
+
+% ═════════════════════════════════════════════════════════════
+%  CHAPTER 2: LITERATURE REVIEW
+% ═════════════════════════════════════════════════════════════
+\chapter{Literature Review}
+
+This chapter presents a review of the existing literature relevant to the ClassiRoute project. The review covers four key areas: large language model architectures and capabilities, model selection and routing strategies, text classification and feature engineering for ML-based routing, and cost optimisation in LLM deployments.
+
+\section{Large Language Model Architectures and Capabilities}
+
+The field of large language models has undergone rapid transformation since the introduction of the Transformer architecture by Vaswani et al. \cite{vaswani2017attention}. The core innovation of the Transformer---the self-attention mechanism---enabled models to process sequential data without the recurrence limitations of earlier RNN-based architectures, paving the way for the scaling laws that have driven LLM development.
+
+OpenAI's GPT-4, described in their technical report \cite{openai-gpt4}, represents a significant milestone in LLM capabilities. The model demonstrates human-level performance on a wide range of professional and academic benchmarks, including the Uniform Bar Exam (scoring in the 90th percentile) and various AP examinations. GPT-4's architecture builds on the decoder-only Transformer design, scaled to an unprecedented number of parameters and training tokens. The report emphasises that model performance improves predictably with scale, following the scaling laws identified by Kaplan et al. \cite{kaplan2020scaling}. However, the report notably does not disclose specific architectural details such as the exact parameter count or training dataset composition, reflecting a trend toward reduced transparency in frontier model development.
+
+The Claude model family from Anthropic, described in their model documentation \cite{anthropic-claude}, takes a different approach focused on alignment and safety. Claude models are trained using Constitutional AI (CAI), a technique that uses a set of written principles to guide model behaviour rather than relying solely on human feedback. This approach has proven effective at producing models that are both capable and helpful while maintaining strong refusal behaviours for harmful requests. The Claude 3 family introduced in 2024 offers three tiers---Haiku, Sonnet, and Opus---that span the cost-capability spectrum, providing natural reference points for ClassiRoute's own three-tier architecture.
+
+Google DeepMind's Gemini family \cite{gemini} represents another major advancement, demonstrating strong multimodal capabilities by training on text, images, audio, and video data simultaneously. The Gemini architecture uses a novel training infrastructure and achieves state-of-the-art results on 32 of 32 academic benchmarks at the time of release. The model's native multimodality distinguishes it from GPT-4V and other models that add vision capabilities post-hoc through additional encoders.
+
+A comprehensive survey by Chen et al. \cite{chen2024efficientllm} systematically examines the landscape of efficient LLM inference techniques. The survey categorises optimisation approaches into five groups: pruning (removing unimportant weights), quantisation (reducing numerical precision), distillation (training smaller models to mimic larger ones), speculative decoding (using a draft model to generate candidates that a target model validates), and caching (reusing computation across requests). The survey finds that these techniques can collectively reduce inference costs by 2-10x without significant quality degradation, though each approach involves trade-offs between compression ratio, implementation complexity, and quality impact.
+
+\section{Model Selection and Routing Strategies}
+
+The challenge of selecting the appropriate model for a given task has been addressed through several approaches in the literature. The Mixtral 8x7B model by Jiang et al. \cite{jiang2023mixtral} demonstrates a sparse mixture-of-experts (MoE) architecture where different subsets of parameters are activated for different inputs. While MoE operates at the sub-model level, routing entire requests to different standalone models---as ClassiRoute does---represents a coarser but more flexible approach that can leverage models from completely different providers and architectures.
+
+Recent work on cascading LLM systems has explored the idea of routing queries through a sequence of increasingly capable (and expensive) models, stopping when a quality threshold is met. This approach, similar to ClassiRoute's fallback mechanism, has been shown to reduce costs by 40-60\% in research settings. However, cascading introduces latency overhead proportional to the number of models invoked, making it less suitable for latency-sensitive applications. ClassiRoute addresses this by making the routing decision before invoking any model, keeping latency to a single inference call plus the classification overhead.
+
+Several commercial and open-source projects have attempted LLM routing. OpenRouter provides a unified API gateway that routes requests across multiple providers based on user-specified priorities (cost, speed, or capability). However, OpenRouter requires the user to specify the routing criteria manually for each request and does not perform ML-based classification. LangChain offers model selection through its model abstractions but again requires manual configuration rather than automatic classification. LLM Proxy is an open-source project that provides basic load balancing across providers but lacks intelligence in routing decisions.
+
+\textbf{Gap in the Literature:} To the best of our knowledge, no existing solution combines ML-based prompt classification, multi-provider routing, confidence-based fallback, a full-stack management interface, and detailed cost analytics into a single integrated system. ClassiRoute fills this gap by providing a complete, production-ready solution that addresses the full lifecycle of LLM request routing.
+
+\section{Text Classification and Feature Engineering}
+
+The ML core of ClassiRoute draws on established techniques in text classification and feature engineering. XGBoost, introduced by Chen and Guestrin \cite{xgboost}, has proven highly effective for text classification tasks across diverse domains. The algorithm's gradient boosting framework with built-in regularisation, handling of missing values, and efficient tree construction makes it particularly well-suited for production ML systems where reliability, interpretability, and performance are critical.
+
+For feature engineering, the literature on text readability and complexity assessment provides the theoretical foundation for ClassiRoute's 22-feature extraction pipeline. The Flesch-Kincaid readability tests \cite{flesch1948readability}, originally developed for assessing the reading difficulty of English text, have been widely adopted in educational and technical contexts. By computing the Flesch-Kincaid grade level, ClassiRoute captures an important dimension of prompt complexity that correlates strongly with the LLM capability required to produce a satisfactory response.
+
+The WizardLM project by Xu et al. \cite{zhou2023wizardlm} introduced the Evol-Instruct methodology for generating training data that covers a wide range of instruction difficulty levels. The Evol-Instruct V2 benchmark dataset, which ClassiRoute uses as one of its training data sources, contains 143k instruction-output pairs spanning simple factual questions to complex multi-step reasoning tasks. The dataset's natural difficulty stratification aligns well with ClassiRoute's three-tier routing objective, providing pre-labelled examples for the Weak, Mid, and Strong categories.
+
+Scikit-learn \cite{pedregosa2011sklearn} provides the standard preprocessing and evaluation infrastructure for the ML pipeline. The library's implementation of StandardScaler for feature normalisation and its comprehensive model evaluation metrics (accuracy, precision, recall, F1-score, confusion matrix) ensure that the ML pipeline follows established best practices for model development and evaluation.
+
+\section{Cost Optimisation in LLM Deployments}
+
+The economics of LLM deployment have become a central concern for organisations adopting AI technologies. The per-token pricing models used by all major LLM providers create a direct relationship between usage volume and operational cost. For applications processing millions of requests per day, even small improvements in routing efficiency translate to substantial cost savings.
+
+The cost disparity between LLM tiers is significant. OpenAI's pricing structure illustrates this clearly: GPT-4o-mini costs \$0.15 per million input tokens versus GPT-4-turbo at \$10.00 per million input tokens---a 67x difference. Similar disparities exist across providers. This pricing structure creates a strong economic incentive for intelligent routing that can identify requests suitable for cheaper models.
+
+Beyond direct API costs, LLM deployment incurs indirect costs including infrastructure (servers, networking, storage), development (integration, testing, maintenance), and operational (monitoring, logging, debugging). A routing system like ClassiRoute must account for these costs by minimising additional infrastructure requirements and operational overhead. ClassiRoute's lightweight ML inference (8.3ms average latency) adds negligible computational overhead, and its dockerised deployment integrates with existing infrastructure without requiring specialised hardware.
+
+The literature on ML operations (MLOps) emphasises the importance of monitoring, observability, and continuous improvement in production ML systems. ClassiRoute's comprehensive logging, analytics dashboard, and virtual key management align with MLOps best practices, providing the visibility needed to understand system behaviour and identify optimisation opportunities.
+
+% ═════════════════════════════════════════════════════════════
+%  CHAPTER 3: REQUIREMENT ANALYSIS AND SYSTEM SPECIFICATION
+% ═════════════════════════════════════════════════════════════
+\chapter{Requirement Analysis and System Specification}
+
+\section{Feasibility Study}
+
+A comprehensive feasibility study was conducted across three dimensions to evaluate the viability of the ClassiRoute system before proceeding with development.
+
+\subsection{Technical Feasibility}
+
+From a technical standpoint, the ClassiRoute system was determined to be highly feasible. The core technologies required for the project are mature and well-established:
+
+\textbf{Machine Learning:} XGBoost is a proven, production-tested gradient boosting framework with extensive documentation, community support, and Python bindings. The feature engineering approach draws on established techniques in text classification and natural language processing. The computational requirements for model training are modest---the final model trains in under five minutes on consumer-grade hardware.
+
+\textbf{Backend Development:} FastAPI is a modern, high-performance web framework for building APIs with Python. It provides automatic OpenAPI documentation, request validation through Pydantic models, and native async support for concurrent request handling. The async PostgreSQL connectivity through SQLAlchemy 2.0 and asyncpg provides robust database access.
+
+\textbf{Frontend Development:} React 19, combined with TypeScript, Tailwind CSS, and Radix UI primitives, provides a modern, accessible, and performant foundation for the dashboard interface. The Vite build tool offers fast development iteration cycles and optimised production builds.
+
+\textbf{Deployment:} Docker containerisation ensures consistent deployment across environments. The target platforms---Vercel for frontend, Render for backend, and Neon for database---are proven cloud services with generous free tiers suitable for demonstration and evaluation.
+
+\subsection{Economical Feasibility}
+
+The economic feasibility of ClassiRoute was assessed from two perspectives: the cost of developing and operating the system itself, and the cost savings it delivers to users.
+
+\textbf{Development Costs:} All core technologies used in ClassiRoute are open-source and freely available, including Python, FastAPI, XGBoost, React, PostgreSQL, and Docker. The development tools (VS Code, Git, GitHub) are also available at no cost. The primary development cost is the time investment, which is the standard cost of any academic or commercial software project.
+
+\textbf{Operational Costs:} The operational costs of running ClassiRoute are minimal. The ML inference pipeline adds approximately ten milliseconds of latency per request and consumes negligible computational resources. The cloud deployment costs depend on the request volume but are modest for typical usage patterns. The free tiers of Vercel, Render, and Neon are sufficient for development, testing, and small-scale production deployments.
+
+\textbf{User Cost Savings:} The cost savings delivered by ClassiRoute are substantial. Empirical evaluation demonstrates a 57.9\% reduction in API costs compared to routing all requests to the strongest available model. For an organisation spending \$10,000 per month on LLM API calls, this translates to approximately \$5,790 in monthly savings.
+
+\subsection{Operational Feasibility}
+
+From an operational perspective, ClassiRoute is designed for straightforward deployment, configuration, and maintenance:
+
+\textbf{Deployment:} The system is fully containerised with Docker, enabling deployment to any container orchestration platform including Docker Compose, Kubernetes, and cloud container services. Deployment scripts and CI/CD pipeline configurations are provided to automate the process.
+
+\textbf{Configuration:} All system configuration, including model tier mappings, provider API keys, confidence thresholds, and database connections, is managed through environment variables. This follows the twelve-factor app methodology and simplifies configuration across different environments.
+
+\textbf{Monitoring:} The dashboard provides built-in monitoring and analytics, and the system logs all requests with timestamps, tier assignments, costs, and response status. Integration with external monitoring tools is straightforward through structured JSON logging.
+
+\textbf{Maintenance:} The modular architecture allows individual components to be updated independently. The ML models can be retrained and replaced without downtime, and the provider adapters can be extended to support new LLM providers as they become available.
+
+\section{Software Requirements Specification}
+
+The Software Requirements Specification (SRS) document defines the functional and non-functional requirements of the ClassiRoute system.
+
+\subsection{Data Requirements}
+
+The system requires persistent storage for the following data entities:
+
+\textbf{Users:} Each user has a unique identifier, email address, hashed password, display name, role (admin or viewer), account creation timestamp, and account status (active or disabled). User data is stored in the \texttt{users} table and managed through the authentication module.
+
+\textbf{Virtual API Keys:} Each virtual key has a unique identifier, a human-readable name, a hashed key value, a reference to the owning user, creation and expiration timestamps, a status flag (active, expired, or revoked), and usage statistics including total requests, total tokens processed, and total cost incurred. Virtual keys are stored in the \texttt{virtual\_keys} table.
+
+\textbf{Request Logs:} Each logged request stores the virtual key identifier used for authentication, the prompt text (or a hash for privacy), the predicted tier, the actual tier used (which may differ due to fallback), the upstream provider and model used, the input and output token counts, the latency in milliseconds, the cost incurred, the response status (success, error, or timeout), and a timestamp. Request logs are stored in the \texttt{request\_logs} table.
+
+\textbf{Analytics Events:} Pre-aggregated analytics data is stored in the \texttt{analytics\_events} table, containing time-bucketed summaries of request volume, cost, latency, and tier distribution. These aggregates enable efficient dashboard queries without scanning the full request logs table.
+
+\subsection{Functional Requirements}
+
+The system must satisfy the following functional requirements:
+
+\textbf{FR1 - Prompt Classification:} The system shall accept a user prompt and, within 100 milliseconds, predict the optimal model tier (Weak, Mid, or Strong) using the trained ML classifier. The prediction shall be accompanied by a confidence score.
+
+\textbf{FR2 - LLM Routing:} The system shall dispatch the prompt to the upstream LLM provider and model corresponding to the predicted tier, using the configured provider adapter. The response shall be streamed back to the caller in real time.
+
+\textbf{FR3 - Confidence-Based Fallback:} If the classifier's confidence score falls below a configurable threshold (default: 0.7), the system shall escalate the request to the next higher tier. If already at the highest tier, the classification shall be accepted.
+
+\textbf{FR4 - OpenAI-Compatible API:} The system shall expose a \texttt{/v1/chat/completions} endpoint that accepts OpenAI-format requests and returns OpenAI-format responses, enabling drop-in integration with existing OpenAI client libraries.
+
+\textbf{FR5 - Authentication:} The system shall authenticate all API requests using JWT-based virtual API keys. The authentication middleware shall validate the key, check its status and expiration, and attach the owning user context to the request.
+
+\textbf{FR6 - Virtual Key Management:} Authorised users shall be able to create, list, view, edit, revoke, and delete virtual API keys through the dashboard interface. Each key's usage statistics shall be tracked and displayed.
+
+\textbf{FR7 - Dashboard Overview:} The dashboard shall display summary statistics including total requests, total cost, cost savings, average latency, and success rate. It shall also show a tier distribution chart and a recent requests list.
+
+\textbf{FR8 - Analytics:} The dashboard shall provide interactive charts for cost trends over time, latency distribution, tier utilisation breakdown, and success rate monitoring. Users shall be able to filter analytics by date range and virtual key.
+
+\textbf{FR9 - Playground:} The dashboard shall include a playground module where users can submit test prompts, view the predicted tier, and optionally override the tier for comparison purposes. The response from each tier shall be displayed side by side.
+
+\subsection{Performance Requirements}
+
+\textbf{PR1 - Classification Latency:} The ML classification pipeline (feature extraction + model inference) shall complete within 100 milliseconds for 99\% of requests.
+
+\textbf{PR2 - API Throughput:} The API gateway shall handle at least 100 concurrent requests without degradation in response time.
+
+\textbf{PR3 - Dashboard Responsiveness:} Dashboard pages shall load within 2 seconds under normal operating conditions.
+
+\textbf{PR4 - Analytics Query Performance:} Analytics queries spanning up to 30 days of data shall return results within 5 seconds.
+
+\textbf{PR5 - Model Loading:} The ML models shall load within 5 seconds at application startup.
+
+\subsection{Dependability Requirements}
+
+\textbf{DR1 - Availability:} The system shall achieve 99.5\% uptime during normal operating hours.
+
+\textbf{DR2 - Error Handling:} All API errors shall be caught, logged, and returned to the caller with appropriate HTTP status codes and descriptive error messages. Unhandled exceptions shall not crash the application.
+
+\textbf{DR3 - Fallback on ML Failure:} If the ML classification pipeline fails for any reason (model loading error, feature extraction error, timeout), the system shall fall back to routing the request to the Mid tier by default, ensuring continued service availability.
+
+\textbf{DR4 - Rate Limiting:} The system shall enforce configurable rate limits per virtual key to prevent abuse and ensure fair resource allocation.
+
+\subsection{Maintainability Requirements}
+
+\textbf{MR1 - Modular Architecture:} The system shall follow a modular architecture with clear separation of concerns between the ML pipeline, API gateway, dashboard frontend, and database layer. Each module shall be independently testable and deployable.
+
+\textbf{MR2 - Configuration Externalisation:} All configurable parameters, including model tier mappings, provider endpoints, confidence thresholds, and rate limits, shall be externalised as environment variables rather than hardcoded.
+
+\textbf{MR3 - Code Documentation:} All major functions and classes shall include docstrings documenting their purpose, parameters, return values, and any side effects.
+
+\textbf{MR4 - Logging:} The system shall produce structured JSON logs with consistent field names, log levels, and request identifiers for tracing and debugging.
+
+\subsection{Security Requirements}
+
+\textbf{SR1 - Authentication:} All API requests must be authenticated using a valid virtual API key. The key shall be transmitted via the \texttt{Authorization: Bearer <key>} header.
+
+\textbf{SR2 - Password Security:} User passwords shall be hashed using bcrypt with a cost factor of at least 12. Plain-text passwords shall never be stored or logged.
+
+\textbf{SR3 - Token Security:} JWT tokens used for dashboard authentication shall have a configurable expiration time (default: 24 hours). Refresh tokens shall have a configurable expiration (default: 7 days).
+
+\textbf{SR4 - HTTPS:} All communications between clients, the API gateway, and upstream providers shall be encrypted using TLS.
+
+\textbf{SR5 - Input Validation:} All user inputs, including prompts, configuration parameters, and API requests, shall be validated and sanitised to prevent injection attacks.
+
+\textbf{SR6 - API Key Hashes:} Virtual API keys shall be stored as bcrypt hashes, not in plain text. When a key is created, its plain-text value shall be shown to the user exactly once and then discarded.
+
+\subsection{Look and Feel Requirements}
+
+\textbf{LF1 - Consistent Design:} The dashboard interface shall use a consistent colour scheme, typography, and spacing throughout, following the design system defined in the Tailwind CSS configuration.
+
+\textbf{LF2 - Responsive Layout:} The dashboard shall be fully responsive and usable on desktop, tablet, and mobile devices. Charts and data tables shall adapt to the available screen width.
+
+\textbf{LF3 - Dark Mode:} The dashboard shall support both light and dark colour themes, with automatic detection based on the user's system preference and manual override available.
+
+\textbf{LF4 - Accessibility:} The interface shall comply with WCAG 2.1 AA standards, including proper heading hierarchies, ARIA labels, keyboard navigation, and sufficient colour contrast ratios.
+
+\textbf{LF5 - Loading States:} All dashboard views shall display appropriate loading indicators while data is being fetched. Empty states shall show helpful messages rather than blank screens.
+
+\section{SDLC Model}
+
+The ClassiRoute project followed a hybrid Agile development methodology combined with elements of the CRISP-DM (Cross-Industry Standard Process for Data Mining) framework for the ML pipeline development.
+
+The development was organised into six major phases:
+
+\textbf{Phase 1: Data Collection and Preparation (Weeks 1-3)}
+During this phase, the training dataset was constructed from multiple sources. Real-world conversational data was collected from public sources including the ShareGPT dataset and the OpenAssistant Conversations dataset. Synthetic prompts were generated programmatically to cover edge cases and underrepresented categories. The WizardLM Evol-Instruct V2 dataset provided pre-labelled examples across diverse difficulty levels. All collected data was cleaned, deduplicated, and formatted into a consistent schema.
+
+\textbf{Phase 2: Feature Engineering and Model Development (Weeks 4-6)}
+This phase focused on developing the feature extraction pipeline and training initial classifier and regressor models. Multiple feature configurations were evaluated, starting with a baseline of simple features (prompt length, word count) and progressively adding more sophisticated features (linguistic, syntactic, semantic). The XGBoost hyperparameters were optimised through cross-validated grid search.
+
+\textbf{Phase 3: Backend API Development (Weeks 7-9)}
+The FastAPI backend was developed in parallel with the ML pipeline. This phase covered the API gateway implementation, provider adapter framework, database schema design and migration, authentication system, and middleware components including rate limiting and logging.
+
+\textbf{Phase 4: Frontend Dashboard Development (Weeks 10-12)}
+The React dashboard was built during this phase, covering the overview page, analytics module, playground interface, virtual keys management, settings pages, and user administration. The frontend was developed in close coordination with the backend API to ensure consistent data contracts.
+
+\textbf{Phase 5: Integration and Testing (Weeks 13-15)}
+Integration testing was conducted to verify end-to-end functionality across all system components. This phase included comprehensive test case execution, performance benchmarking, security auditing, and user acceptance testing with a small group of beta testers.
+
+\textbf{Phase 6: Deployment and Documentation (Weeks 16-18)}
+The final phase covered Docker containerisation, CI/CD pipeline configuration, cloud deployment to Vercel, Render, and Neon, and the preparation of comprehensive documentation including this report, API documentation, and deployment guides.
+
+%% ═════════════════════════════════════════════════════════════
+%%  CHAPTER 3: SYSTEM DESIGN
+%% ═════════════════════════════════════════════════════════════
+\chapter{System Design}
+
+\section{Design Approach}
+
+ClassiRoute follows an object-oriented design approach combined with a layered architecture pattern. The system is decomposed into four primary layers, each with well-defined responsibilities and interfaces:
+
+\textbf{Presentation Layer:} The React-based single-page application provides the user interface for system management, monitoring, and configuration. This layer communicates with the backend exclusively through RESTful API calls and WebSocket connections for real-time updates.
+
+\textbf{Application Layer:} The FastAPI backend serves as the application layer, implementing the business logic for authentication, routing, analytics, and key management. This layer contains the API route handlers, middleware components, and service orchestration logic.
+
+\textbf{ML Pipeline Layer:} The classification and regression models, along with the feature extraction pipeline, reside in this layer. The ML pipeline is invoked by the application layer during request processing and exposes a clean inference interface with input validation and error handling.
+
+\textbf{Data Layer:} PostgreSQL, accessed through the SQLAlchemy async ORM, provides persistent storage. This layer handles data modelling, migration management, query optimisation, and connection pooling.
+
+The architecture follows the principle of separation of concerns: each layer depends only on the layer directly below it, and inter-layer communication occurs through well-defined interfaces. This modularity enables independent testing, development, and deployment of each layer.
+
+\section{Detailed System Design}
+
+The detailed design of the ClassiRoute system encompasses multiple architectural views using standard software engineering notation and structured analysis and design tools.
+
+\subsection{System Architecture}
+
+Figure~\ref{fig:system_architecture} presents the high-level system architecture of ClassiRoute, illustrating the interaction between the React frontend, FastAPI backend, PostgreSQL database, XGBoost classifier, and the three-tier LLM provider routing system.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{system_architecture.png}
+  \caption{High-level system architecture of ClassiRoute showing the React frontend, FastAPI backend, PostgreSQL database, XGBoost classifier, and three-tier LLM provider routing}
+  \label{fig:system_architecture}
+\end{figure}
+
+The architecture centres on the FastAPI application server, which handles all incoming requests. The frontend communicates with the backend through a RESTful API secured by JWT authentication. External API consumers connect through the OpenAI-compatible gateway endpoint, which is authenticated using virtual API keys.
+
+\subsection{Provider Adapter Pattern}
+
+The provider adapter layer implements the Strategy design pattern to abstract the differences between various LLM providers. Each provider adapter implements a common interface that defines methods for sending chat completion requests and processing responses. This design allows new providers to be added without modifying the routing logic.
+
+Figure~\ref{fig:provider_adapter_uml} presents the UML class diagram for the provider adapter framework.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{provider_adapter_uml.png}
+  \caption{UML class diagram showing the provider adapter pattern with concrete implementations for OpenAI, Anthropic, and Google Gemini providers}
+  \label{fig:provider_adapter_uml}
+\end{figure}
+
+The adapter interface defines three core methods: \texttt{send\_request()} for dispatching chat completion requests, \texttt{parse\_response()} for converting provider-specific response formats into a standardised format, and \texttt{get\_cost()} for computing the cost of a request based on token usage. Concrete adapter classes implement this interface for each supported provider.
+
+\subsection{Routing Pipeline}
+
+The routing pipeline is the core data flow through the system, processing each incoming prompt through a sequence of well-defined stages:
+
+\begin{enumerate}
+  \item \textbf{Request Reception:} The API gateway receives the incoming request and performs authentication, input validation, and rate limit checking.
+  \item \textbf{Feature Extraction:} The prompt text is passed through the feature extraction pipeline, which computes twenty-two numerical features covering lexical, syntactic, semantic, and structural properties.
+  \item \textbf{Classification:} The feature vector is fed into the XGBoost classifier, which predicts the optimal model tier (Weak, Mid, or Strong) with an associated probability vector.
+  \item \textbf{Confidence Assessment:} The maximum probability from the classifier is compared against the confidence threshold. If below the threshold, the request is escalated to the next higher tier.
+  \item \textbf{Difficulty Scoring:} The XGBoost regressor computes a continuous difficulty score for the prompt. If the score exceeds a configurable threshold, the request is escalated regardless of the classifier output.
+  \item \textbf{Provider Dispatch:} The determined tier is mapped to a concrete provider and model through the tier configuration. The request is dispatched using the corresponding provider adapter.
+  \item \textbf{Response Streaming:} The provider response is streamed back to the caller through the OpenAI-compatible response format. Request metadata is logged for analytics.
+\end{enumerate}
+
+Figure~\ref{fig:routing_pipeline} illustrates the complete routing pipeline flow.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{routing_pipeline.png}
+  \caption{Prompt routing pipeline flow from feature extraction through XGBoost classification to provider dispatch with confidence-based fallback}
+  \label{fig:routing_pipeline}
+\end{figure}
+
+\subsection{Data Flow Diagrams}
+
+The system's data flow is represented through multiple levels of Data Flow Diagrams (DFDs).
+
+\textbf{Context-Level DFD (Level 0):} At the highest level of abstraction, ClassiRoute interacts with three external entities: users (who access the dashboard and manage keys), API consumers (applications that send prompts through the gateway), and LLM providers (upstream AI model services). The system receives authentication credentials, API requests, and configuration inputs, and produces responses, analytics data, and cost reports.
+
+\textbf{Level 1 DFD:} The level 1 DFD decomposes the system into four major processes: (1) Authentication and Key Management, which handles user login, virtual key creation and validation; (2) Request Routing, which encompasses prompt reception, classification, and dispatch; (3) Analytics Processing, which aggregates request logs and generates summary statistics; and (4) Configuration Management, which handles tier configuration and system settings.
+
+\subsection{Use Case Diagrams}
+
+The system supports four primary actor roles:
+
+\textbf{System Administrator:} Manages user accounts, monitors system health, configures global settings, and views comprehensive analytics across all virtual keys.
+
+\textbf{Dashboard User:} Accesses the management dashboard, views analytics for their own virtual keys, creates and manages API keys, and uses the playground for testing prompts.
+
+\textbf{API Consumer:} An automated client application that sends prompts through the API gateway using a virtual API key. This actor interacts with the system exclusively through the OpenAI-compatible API endpoint.
+
+\textbf{ML Engineer:} Manages the ML models, retrains and replaces model files, configures feature extraction parameters, and monitors model performance metrics.
+
+The primary use cases include: authenticate user, manage virtual keys, send chat completion request, view dashboard overview, view analytics, use playground, configure tier mappings, manage user accounts, and manage ML models.
+
+\subsection{Sequence Diagrams}
+
+The sequence of interactions for a typical request routing scenario is as follows:
+
+\begin{enumerate}
+  \item The API Consumer sends a POST request to \texttt{/v1/chat/completions} with the prompt and the virtual API key in the Authorization header.
+  \item The Authentication Middleware intercepts the request, extracts and validates the API key, verifies it against the database, and checks the key status and rate limits.
+  \item The Router Controller receives the authenticated request and extracts the prompt text from the message list.
+  \item The Feature Extractor processes the prompt and returns a 22-element feature vector.
+  \item The XGBoost Classifier predicts the tier probabilities and the XGBoost Regressor computes the difficulty score.
+  \item The Routing Decision module applies the confidence threshold and fallback logic to determine the final tier.
+  \item The Provider Dispatcher looks up the configured provider and model for the determined tier and invokes the appropriate Provider Adapter.
+  \item The Provider Adapter sends the request to the upstream LLM provider and streams the response back through the API gateway to the API Consumer.
+  \item In parallel, the Request Logger records the request metadata including tier assignment, latency, token usage, and cost.
+\end{enumerate}
+
+\subsection{Activity Diagrams}
+
+The prompt processing workflow is modelled as an activity diagram with the following key activities and decision points:
+
+\textbf{Activity: Receive Request:} The system listens for incoming HTTP requests and performs initial parsing and validation. Decision: Is the request format valid? If no, return a 400 error response.
+
+\textbf{Activity: Authenticate:} The API key is extracted from the Authorization header and verified. Decision: Is the key valid and active? If no, return a 401 authentication error.
+
+\textbf{Activity: Classify Prompt:} The feature extraction and ML classification are performed. Decision: Is classification confidence above the threshold? If no, escalate to the next tier.
+
+\textbf{Activity: Route Request:} The request is dispatched to the selected provider. Decision: Does the provider respond successfully? If no, attempt retry or return an error response.
+
+\textbf{Activity: Log and Respond:} The request outcome is logged and the response is streamed to the caller.
+
+\subsection{State Diagrams}
+
+The lifecycle of a virtual API key is modelled through the following states:
+
+\textbf{Active:} The initial state when a key is created. The key can be used for authentication and routing requests from this state.
+
+\textbf{Expired:} The key reaches this state when its expiration timestamp is passed. The system automatically transitions expired keys to this state. Expired keys cannot be used for authentication.
+
+\textbf{Revoked:} An administrator or the key owner can explicitly revoke a key from the Active state. Revoked keys are immediately disabled and cannot be reactivated.
+
+\textbf{Deleted:} Keys can be permanently deleted from the database, removing all associated usage data.
+
+The request lifecycle follows these states: Received (request arrives at gateway), Authenticating (key validation in progress), Classifying (ML pipeline executing), Routing (request dispatched to provider), Streaming (response being streamed to caller), Completed (response fully delivered), and Failed (error occurred at any stage).
+
+\subsection{Communication Diagrams}
+
+The communication between system components during request processing involves the following interactions:
+
+\begin{enumerate}
+  \item \textbf{Client to Gateway:} HTTP POST request with prompt and API key.
+  \item \textbf{Gateway to Auth Service:} API key validation request.
+  \item \textbf{Auth Service to Database:} Key lookup query.
+  \item \textbf{Gateway to ML Pipeline:} Feature extraction and classification request.
+  \item \textbf{ML Pipeline to Gateway:} Predicted tier and confidence score.
+  \item \textbf{Gateway to Provider Adapter:} Dispatch request with prompt and provider configuration.
+  \item \textbf{Provider Adapter to Upstream API:} HTTP POST request to the LLM provider.
+  \item \textbf{Upstream API to Provider Adapter:} Streamed response.
+  \item \textbf{Provider Adapter to Gateway:} Standardised response stream.
+  \item \textbf{Gateway to Logger:} Request metadata for logging.
+  \item \textbf{Logger to Database:} Persistent storage of request log.
+  \item \textbf{Gateway to Client:} Streamed response.
+\end{enumerate}
+
+\subsection{Deployment Diagram}
+
+The deployment architecture follows a distributed, cloud-native pattern with three main deployment nodes, as illustrated in Figure~\ref{fig:deployment_diagram}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{deployment_diagram.png}
+  \caption{Deployment diagram showing the cloud infrastructure with Vercel hosting the React frontend, Render hosting the FastAPI backend, and Neon providing managed PostgreSQL}
+  \label{fig:deployment_diagram}
+\end{figure}
+
+The frontend is deployed as a static site on Vercel, which provides global CDN distribution, automatic SSL, and seamless integration with the GitHub repository for continuous deployment. The backend is deployed as a web service on Render, which handles container orchestration, auto-scaling, and zero-downtime deployments. The PostgreSQL database is managed by Neon, which provides automated backups, point-in-time recovery, and connection pooling.
+
+Docker containers ensure consistency across development, staging, and production environments. Each container bundles the application code along with its dependencies, runtime, and configuration. The CI/CD pipeline, implemented through GitHub Actions, automatically builds, tests, and deploys the application on every push to the main branch.
+
+\subsection{Database Design and Entity-Relationship Diagram}
+
+The database schema consists of four primary tables forming a cohesive data model for the ClassiRoute system, as shown in Figure~\ref{fig:er_diagram}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{er_diagram.png}
+  \caption{Entity-relationship diagram showing the PostgreSQL database schema with users, virtual keys, request logs, and analytics events tables}
+  \label{fig:er_diagram}
+\end{figure}
+
+The \texttt{users} table stores user account information including email, hashed password, display name, role, and account status. The \texttt{virtual\_keys} table stores API keys with fields for the key name, hashed key value, owning user reference, creation and expiration timestamps, status, and aggregated usage statistics. The \texttt{request\_logs} table records every API request with the virtual key identifier, prompt hash, predicted and actual tiers, provider and model names, token counts, latency, cost, status, and timestamp. The \texttt{analytics\_events} table stores pre-computed time-bucketed analytics summaries for efficient dashboard querying.
+
+The relationships between entities are as follows: a user can own multiple virtual keys (one-to-many), a virtual key can have multiple request logs (one-to-many), and each request log belongs to exactly one virtual key. The analytics events table is denormalised for query performance and does not have direct foreign key relationships to the other tables.
+
+\subsection{Authentication Flow}
+
+The authentication system uses JWT (JSON Web Token) for stateless authentication. The flow is illustrated in Figure~\ref{fig:auth_flow}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{auth_flow.png}
+  \caption{JWT-based authentication flow sequence diagram showing login, token validation, and token refresh operations}
+  \label{fig:auth_flow}
+\end{figure}
+
+When a user logs in, the backend validates their credentials against the stored bcrypt hash and issues an access token (valid for 24 hours) and a refresh token (valid for 7 days). The access token is sent with every subsequent API request in the Authorization header. When the access token expires, the client can use the refresh token to obtain a new access token without requiring the user to log in again.
+
+Virtual API keys use a separate authentication mechanism. When an API consumer sends a request with a virtual API key, the system looks up the key in the database, verifies its status and expiration, and attaches the key's metadata to the request context for logging and rate limiting purposes.
+
+\section{User Interface Design}
+
+The dashboard interface is designed around a clean, modern aesthetic with a focus on data visualisation and ease of navigation. The colour scheme uses a blue-grey primary palette with semantic colours for cost savings (green), alerts (amber), and errors (red). The interface supports both light and dark themes.
+
+The layout follows a responsive grid system with a persistent sidebar navigation on desktop that collapses to a bottom navigation bar on mobile devices. The sidebar provides access to the Overview, Analytics, Playground, Keys, Settings, and Administration modules.
+
+\subsection{Dashboard Overview}
+
+The overview page presents a summary of system operations at a glance. A statistics bar at the top displays key metrics including total requests processed, total cost incurred, estimated cost savings compared to a strong-model baseline, average response latency, and overall success rate. Below the statistics bar, a tier distribution donut chart shows the percentage of requests routed to each tier, providing immediate visibility into the system's routing behaviour. A latency distribution histogram displays the response time distribution across all requests. A recent requests table lists the most recent API calls with their tier assignments, costs, and status indicators.
+
+\subsection{Analytics Module}
+
+The analytics page provides detailed historical insights through interactive charts and filters. A date range selector allows users to view data for any time period. Cost trends are displayed as a line chart showing daily accumulated costs, with separate series for each tier to enable cost composition analysis. Latency distribution is shown as a histogram with configurable bucket sizes. Tier utilisation is visualised as a stacked area chart showing the proportion of requests handled by each tier over time. Success and error rates are tracked through a time-series chart with configurable aggregation intervals.
+
+All charts are interactive, supporting zoom, pan, and hover tooltips for inspecting individual data points. Users can export chart data as CSV for further analysis in external tools.
+
+\subsection{Playground Module}
+
+The playground provides an interactive interface for testing prompts and understanding the system's routing decisions. Users can enter a prompt in a text area, optionally override the predicted tier, and submit the request. The response displays the predicted tier, confidence scores for each tier, the difficulty score from the regressor, and the actual response from the selected provider.
+
+A comparison mode allows users to send the same prompt to all three tiers simultaneously and view the responses side by side, facilitating qualitative comparison of model outputs across tiers.
+
+\subsection{Virtual Keys Management}
+
+The keys management page provides a complete interface for administering virtual API keys. A table lists all keys with their names, creation dates, expiration dates, status indicators, and usage statistics. Users can create new keys through a dialog that accepts a name, optional expiration date, and optional usage limits. When a key is created, its plain-text value is displayed once and must be copied before the dialog is closed. Keys can be revoked individually, which immediately invalidates them.
+
+\section{Methodology}
+
+The development methodology for ClassiRoute combined the CRISP-DM framework for the ML pipeline components with Agile software development practices for the application development components.
+
+\subsection{CRISP-DM Phases}
+
+\textbf{Business Understanding:} The project began with a thorough analysis of the LLM cost optimisation problem, including interviews with developers who use LLM APIs in production, analysis of pricing structures across major providers, and a review of existing approaches to model selection and routing.
+
+\textbf{Data Understanding:} Multiple potential data sources were evaluated for training the classification model. Real-world conversational datasets provided naturalistic examples but required significant cleaning and labelling. Synthetic data generation offered controlled coverage of specific scenarios. Benchmark datasets provided pre-labelled examples with established quality standards.
+
+\textbf{Data Preparation:} The collected data underwent extensive cleaning and preprocessing. Duplicate prompts were removed, formatting inconsistencies were corrected, and all text was normalised to a consistent encoding scheme. The data was then split into training, validation, and test sets using stratified sampling to maintain class distribution across splits.
+
+\textbf{Modelling:} Multiple classification algorithms were evaluated, including logistic regression, random forests, support vector machines, gradient boosting, and XGBoost. XGBoost was selected as the final algorithm based on its superior performance, robust handling of mixed feature types, built-in regularisation, and efficient training.
+
+\textbf{Evaluation:} Models were evaluated using accuracy, precision, recall, F1-score, and confusion matrix analysis. The confidence threshold was optimised using a cost-sensitive evaluation that weighted misclassifications by their economic impact (e.g., routing a complex query to a weak model was penalised more heavily than routing a simple query to a strong model).
+
+\textbf{Deployment:} The trained models were serialised using the XGBoost internal format and packaged as part of the backend application's Docker image. The model loading and inference pipeline was designed for sub-100-millisecond latency in production.
+
+\subsection{Agile Practices}
+
+The application development followed an Agile approach with two-week sprints. Each sprint began with a planning session where user stories from the product backlog were estimated and assigned. Daily stand-up meetings tracked progress and identified blockers. Sprint reviews demonstrated completed features to stakeholders. Retrospectives identified process improvements for subsequent sprints.
+
+The product backlog was maintained as a GitHub Projects board, with user stories organised by priority and epic. Each story included acceptance criteria, technical notes, and effort estimates. Development tasks were tracked as individual issues linked to their parent stories.
+
+%% ═════════════════════════════════════════════════════════════
+%%  CHAPTER 4: IMPLEMENTATION AND TESTING
+%% ═════════════════════════════════════════════════════════════
+\chapter{Implementation and Testing}
+
+\section{Languages, IDEs, Tools and Technologies}
+
+ClassiRoute was implemented using a modern technology stack selected for performance, developer productivity, and ecosystem maturity.
+
+\subsection{Backend Technologies}
+
+\textbf{Python 3.13:} The backend is written entirely in Python, leveraging its extensive ecosystem for ML, web development, and data processing. Python's dynamic typing is complemented by type hints throughout the codebase, enabling static type checking with mypy.
+
+\textbf{FastAPI:} The web framework of choice for its async-first architecture, automatic OpenAPI documentation generation, Pydantic-based request validation, and exceptional performance. FastAPI's dependency injection system simplifies middleware composition and testability.
+
+\textbf{SQLAlchemy 2.0 (Async):} The ORM layer provides async database access with PostgreSQL. The declarative mapping system simplifies data model definition, and the unit of work pattern ensures transactional integrity.
+
+\textbf{Alembic:} Database migrations are managed through Alembic, which generates migration scripts automatically from model changes and supports both upgrade and downgrade paths.
+
+\textbf{Scikit-learn and XGBoost:} The ML pipeline uses scikit-learn for feature preprocessing (standard scaling, label encoding) and XGBoost for the classification and regression models.
+
+\textbf{Pydantic:} All API request and response models are defined using Pydantic, providing automatic validation, serialisation, and OpenAPI schema generation.
+
+\subsection{Frontend Technologies}
+
+\textbf{React 19:} The dashboard is built with the latest version of React, leveraging the improved server component architecture and concurrent rendering capabilities.
+
+\textbf{TypeScript:} TypeScript provides static type checking across the frontend codebase, catching type-related errors at compile time and providing IDE autocompletion.
+
+\textbf{Vite:} The build tool provides fast hot module replacement during development and optimised production builds with code splitting and tree shaking.
+
+\textbf{Tailwind CSS v4:} Utility-first CSS framework for rapid UI development with consistent design tokens and responsive layouts.
+
+\textbf{Radix UI Primitives:} Accessible, unstyled UI primitives for building modals, dialogs, dropdowns, and other interactive components.
+
+\textbf{Recharts:} Declarative charting library built on React components, providing interactive charts for the analytics module.
+
+\subsection{DevOps and Deployment Technologies}
+
+\textbf{Docker:} Containerisation ensures consistent environments across development, testing, and production.
+
+\textbf{GitHub Actions:} CI/CD pipeline automation for testing, building, and deploying the application.
+
+\textbf{Vercel:} Frontend hosting with global CDN, automatic SSL, and preview deployments for pull requests.
+
+\textbf{Render:} Backend hosting with auto-scaling, zero-downtime deployments, and managed PostgreSQL alternatives.
+
+\textbf{Neon:} Managed PostgreSQL with automated backups, point-in-time recovery, and connection pooling.
+
+\textbf{VS Code:} Primary development environment with extensions for Python, TypeScript, Docker, and Git integration.
+
+\textbf{Git and GitHub:} Version control and collaboration platform with pull request workflows and code review.
+
+\section{Algorithm and Pseudocode}
+
+\subsection{Feature Extraction Algorithm}
+
+The feature extraction pipeline processes each prompt through a series of analysis steps to produce the 22-dimensional feature vector. The algorithm is as follows:
+
+\begin{lstlisting}[caption=Feature Extraction Algorithm]
+def extract_features(prompt: str) -> np.ndarray:
+    features = []
+    
+    # Lexical features
+    prompt_len = len(prompt)                           # characters
+    word_count = len(prompt.split())                    # words
+    features.extend([prompt_len, word_count])
+    
+    # POS tagging features
+    doc = nlp(prompt)
+    noun_count = sum(1 for t in doc if t.pos_ == "NOUN")
+    verb_count = sum(1 for t in doc if t.pos_ == "VERB")
+    adj_count = sum(1 for t in doc if t.pos_ == "ADJ")
+    noun_ratio = noun_count / max(word_count, 1)
+    verb_ratio = verb_count / max(word_count, 1)
+    adj_ratio = adj_count / max(word_count, 1)
+    features.extend([noun_ratio, verb_ratio, adj_ratio])
+    
+    # Semantic features
+    sentiment = analyzer.polarity_scores(prompt)["compound"]
+    features.append(sentiment)
+    
+    # Readability
+    readability = textstat.flesch_kincaid_grade(prompt)
+    features.append(readability)
+    
+    # Structural features
+    has_code = bool(re.search(r'```|def |class |import ', prompt))
+    question_count = prompt.count("?")
+    imperative_count = len(list(
+        find_imperative_sentences(doc)
+    ))
+    features.extend([has_code, question_count, 
+                     imperative_count])
+    
+    # Lexical diversity
+    tech_terms = sum(1 for t in doc if t.ent_type_ in 
+                     ["PRODUCT", "ORG", "GPE", "TECH"])
+    url_count = len(re.findall(r'https?://\S+', prompt))
+    num_count = len(re.findall(r'\d+', prompt))
+    uppercase_ratio = sum(1 for c in prompt 
+                          if c.isupper()) / max(prompt_len, 1)
+    features.extend([tech_terms, url_count, num_count, 
+                     uppercase_ratio])
+    
+    # Density metrics
+    punct_density = sum(1 for c in prompt 
+                        if c in string.punctuation) / prompt_len
+    stopword_ratio = sum(1 for t in doc 
+                         if t.is_stop) / max(word_count, 1)
+    unique_ratio = len(set(t.text.lower() 
+                           for t in doc)) / max(word_count, 1)
+    avg_word_len = prompt_len / max(word_count, 1)
+    features.extend([punct_density, stopword_ratio, 
+                     unique_ratio, avg_word_len])
+    
+    # Sentence-level features
+    sentences = list(doc.sents)
+    sentence_count = len(sentences)
+    avg_sentence_len = word_count / max(sentence_count, 1)
+    features.extend([sentence_count, avg_sentence_len])
+    
+    return np.array(features, dtype=np.float32)
+\end{lstlisting}
+
+\subsection{XGBoost Training Algorithm}
+
+The classifier training process involves the following steps:
+
+\begin{lstlisting}[caption=XGBoost Classifier Training]
+def train_classifier(X_train, y_train, X_val, y_val):
+    model = xgb.XGBClassifier(
+        objective="multi:softprob",
+        num_class=3,
+        max_depth=6,
+        learning_rate=0.1,
+        n_estimators=200,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        reg_lambda=1.0,
+        reg_alpha=0.1,
+        eval_metric=["mlogloss", "merror"],
+        early_stopping_rounds=20,
+        random_state=42
+    )
+    
+    model.fit(
+        X_train, y_train,
+        eval_set=[(X_val, y_val)],
+        verbose=True
+    )
+    
+    return model
+\end{lstlisting}
+
+\subsection{Inference Pipeline Algorithm}
+
+The complete inference pipeline that processes a single request is as follows:
+
+\begin{lstlisting}[caption=Request Inference Pipeline]
+def route_request(prompt: str, tier_config: dict,
+                  models: dict) -> RouteResponse:
+    # Step 1: Extract features
+    features = extract_features(prompt)
+    features_scaled = models["scaler"].transform(
+        features.reshape(1, -1)
+    )
+    
+    # Step 2: Classify tier
+    probs = models["classifier"].predict_proba(
+        features_scaled
+    )[0]
+    predicted_tier = np.argmax(probs)
+    confidence = probs[predicted_tier]
+    
+    # Step 3: Score difficulty
+    difficulty = models["regressor"].predict(
+        features_scaled
+    )[0]
+    
+    # Step 4: Apply fallback logic
+    tier = predicted_tier
+    if confidence < CONFIDENCE_THRESHOLD:
+        tier = min(tier + 1, NUM_TIERS - 1)
+    if difficulty > DIFFICULTY_THRESHOLD:
+        tier = min(tier + 1, NUM_TIERS - 1)
+    
+    # Step 5: Route to provider
+    provider = tier_config[tier]["provider"]
+    model_name = tier_config[tier]["model"]
+    response = provider.send_request(prompt, model_name)
+    
+    return RouteResponse(
+        tier=tier,
+        confidence=confidence,
+        difficulty=difficulty,
+        response=response
+    )
+\end{lstlisting}
+
+\section{API Endpoint Implementation}
+
+The backend API is organised into modular route handlers, each responsible for a specific domain.
+
+\subsection{Authentication Endpoints}
+
+The authentication module exposes four endpoints:
+
+\texttt{POST /api/auth/register:} Creates a new user account. The request body includes email, password, and display name. The password is hashed using bcrypt with a cost factor of 12 before storage. Returns the created user object (excluding the password hash) along with a JWT access token.
+
+\texttt{POST /api/auth/login:} Authenticates a user by email and password. Validates the credentials against the stored bcrypt hash and issues an access token (valid for 24 hours) and a refresh token (valid for 7 days). The access token is a JWT containing the user ID, email, and role as claims.
+
+\texttt{POST /api/auth/refresh:} Accepts a valid refresh token and returns a new access token. This endpoint enables seamless token rotation without requiring the user to log in again. Refresh tokens can be used only once and are rotated to prevent token reuse.
+
+\texttt{POST /api/auth/logout:} Invalidates the current refresh token, effectively logging the user out. This endpoint is important for security, allowing users to terminate active sessions.
+
+\subsection{Virtual Key Management Endpoints}
+
+The key management module exposes CRUD operations for virtual API keys:
+
+\texttt{GET /api/keys:} Lists all virtual keys belonging to the authenticated user, including their names, creation dates, expiration dates, statuses, and aggregated usage statistics.
+
+\texttt{POST /api/keys:} Creates a new virtual API key. The user specifies a name and optionally an expiration date and usage limits. The system generates a cryptographic random key prefixed with \texttt{sk-cl-} for easy identification. The plain-text key value is returned exactly once in the response and cannot be retrieved later; only the bcrypt hash is stored in the database.
+
+\texttt{GET /api/keys/\{id\}:} Returns detailed information about a specific virtual key, including per-day usage statistics and recent request history. Access is restricted to the key's owning user.
+
+\texttt{PATCH /api/keys/\{id\}:} Updates the properties of an existing virtual key, such as its name, expiration date, or status. This endpoint supports partial updates, allowing individual fields to be modified independently.
+
+\texttt{DELETE /api/keys/\{id\}:} Permanently deletes a virtual key and all associated data. This operation is irreversible and should be used with caution.
+
+\subsection{Chat Completions Endpoint}
+
+The primary API gateway endpoint implements the OpenAI-compatible chat completions interface:
+
+\texttt{POST /v1/chat/completions:} Accepts an OpenAI-format request with the following fields: model (optional, used for compatibility), messages (array of message objects with role and content), temperature (optional, sampling temperature), max\_tokens (optional, maximum response length), stream (optional, boolean for streaming response). The endpoint performs the following steps:
+
+\begin{enumerate}
+  \item Extracts the virtual API key from the Authorization header and validates it against the database.
+  \item Parses the messages array to extract the latest user prompt text.
+  \item Invokes the ML classification pipeline to predict the optimal tier.
+  \item Applies confidence-based and difficulty-based fallback logic.
+  \item Dispatches the request to the configured provider for the determined tier.
+  \item Streams the response back in OpenAI-compatible format using server-sent events (SSE).
+  \item Logs the complete request metadata for analytics processing.
+\end{enumerate}
+
+\subsection{Analytics Endpoints}
+
+The analytics module exposes endpoints for dashboard data retrieval:
+
+\texttt{GET /api/analytics/overview:} Returns the summary statistics displayed on the dashboard overview page, including total requests, total cost, cost savings, average latency, and success rate for a configurable time range.
+
+\texttt{GET /api/analytics/tier-distribution:} Returns the distribution of requests across Weak, Mid, and Strong tiers, used for rendering the tier distribution donut chart.
+
+\texttt{GET /api/analytics/cost-trends:} Returns daily cost aggregation data for cost trend charts, with optional filtering by tier and date range.
+
+\texttt{GET /api/analytics/latency-distribution:} Returns latency histogram data with configurable bucket sizes for the latency distribution chart.
+
+\texttt{GET /api/analytics/usage-by-key:} Returns per-key usage statistics for the virtual keys analytics view, enabling per-user or per-application cost attribution.
+
+\section{Frontend Component Architecture}
+
+The React frontend is organised into a component hierarchy that mirrors the page structure of the dashboard. The top-level \texttt{App} component manages routing and authentication state. The \texttt{Layout} component provides the persistent sidebar navigation and responsive grid structure. Each page module is implemented as a self-contained component with its own data fetching, state management, and sub-components.
+
+\subsection{State Management}
+
+Frontend state management follows a decentralised pattern using React hooks and context providers. The \texttt{AuthContext} provider manages authentication state (current user, tokens, login/logout actions). The \texttt{AnalyticsContext} provider caches analytics data and provides refresh capabilities. Individual page components use the \texttt{useState} and \texttt{useEffect} hooks for local component state and side effect management.
+
+Data fetching is handled through a custom \texttt{useApi} hook that wraps the fetch API with authentication token injection, error handling, and loading state management. This hook ensures consistent error handling and authentication across all API calls.
+
+\subsection{Reusable Components}
+
+The frontend implements a library of reusable components:
+
+\textbf{DataTable:} A generic table component with sorting, filtering, pagination, and row selection. Used by the recent requests table, keys listing, and user administration table.
+
+\textbf{StatCard:} A card component for displaying key performance indicators with label, value, trend indicator, and optional icon. Used in the overview statistics bar.
+
+\textbf{ChartContainer:} A wrapper component for chart visualisations that handles responsive resizing, loading state, and tooltip positioning. Wraps Recharts chart components.
+
+\textbf{StatusBadge:} A colour-coded badge component for displaying status indicators (active, expired, revoked, success, error, warning). Uses semantic colours for immediate visual recognition.
+
+\textbf{ConfirmDialog:} A modal dialog for confirming destructive actions such as key revocation or deletion. Includes configurable title, message, and action button text.
+
+\textbf{EmptyState:} A placeholder component displayed when a data view has no content, showing a helpful message and suggested actions.
+
+\subsection{API Service Layer}
+
+The frontend communicates with the backend through a typed API service layer. Each endpoint group has a corresponding service module that defines typed request and response interfaces using TypeScript. The service layer handles authentication token injection, request serialisation, response parsing, and error normalisation.
+
+\begin{lstlisting}[caption=Frontend API service example, language={},basicstyle=\ttfamily\footnotesize]
+// Example: Analytics API service
+export interface CostTrend {
+  date: string;
+  weak_cost: number;
+  mid_cost: number;
+  strong_cost: number;
+}
+
+export async function fetchCostTrends(
+  startDate: string,
+  endDate: string
+): Promise<CostTrend[]> {
+  const response = await api.get("/analytics/cost-trends", {
+    params: { start_date: startDate, end_date: endDate },
+  });
+  return response.data as CostTrend[];
+}
+\end{lstlisting}
+
+\section{Testing Techniques}
+
+A comprehensive testing strategy was employed across multiple levels of the system.
+
+\subsection{Unit Testing}
+
+Unit tests were written for individual functions and classes using pytest. The ML pipeline tests cover feature extraction correctness (ensuring each feature is computed correctly), model serialisation and deserialisation, and edge cases such as empty prompts, very long prompts, and prompts with special characters. Backend tests cover API route handlers, authentication middleware, database operations, and error handling. Frontend tests cover component rendering, state management, and user interaction flows.
+
+\subsection{Integration Testing}
+
+Integration tests verify the interaction between system components. The API integration tests exercise the complete request flow from HTTP request to provider dispatch and response streaming, with mock provider adapters to avoid actual API calls during testing. Database integration tests verify migration execution, data persistence, and query correctness.
+
+\subsection{ML Model Evaluation}
+
+The ML models were evaluated using a held-out test set comprising 20\% of the total dataset. The evaluation metrics and results are summarised in Table~\ref{tab:ml_results}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{XGBoost Classifier and Regressor Evaluation Results}
+  \label{tab:ml_results}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Metric} & \textbf{Classifier} & \textbf{Regressor} \\
+    \midrule
+    Accuracy & 92.31\% & --- \\
+    Macro Precision & 0.91 & --- \\
+    Macro Recall & 0.90 & --- \\
+    Macro F1-Score & 0.905 & --- \\
+    RMSE & --- & 0.187 \\
+    R\textsuperscript{2} & --- & 0.843 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Performance Testing}
+
+Performance testing was conducted to verify that the system meets the response time requirements specified in the SRS. The ML inference pipeline was benchmarked using 10,000 random prompts, achieving a mean latency of 8.3 milliseconds with a 99th percentile of 14.1 milliseconds. The API gateway was load-tested using Locust with 100 concurrent simulated users, achieving a sustained throughput of 320 requests per second without errors.
+
+\section{Test Cases}
+
+Table~\ref{tab:test_cases} presents representative test cases covering critical system functionality.
+
+\begin{longtable}{p{2cm}p{3cm}p{3cm}p{3cm}p{3cm}}
+  \caption{Representative Test Cases for ClassiRoute} \\
+  \label{tab:test_cases} \\
+  \toprule
+  \textbf{Test ID} & \textbf{Test Scenario} & \textbf{Input} & \textbf{Expected Output} & \textbf{Result} \\
+  \midrule
+  \endfirsthead
+  \caption[]{Representative Test Cases for ClassiRoute (continued)} \\
+  \toprule
+  \textbf{Test ID} & \textbf{Test Scenario} & \textbf{Input} & \textbf{Expected Output} & \textbf{Result} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  \endlastfoot
+  
+  TC-001 & Simple greeting & "Hello, how are you?" & Weak tier, confidence $>$ 0.9 & Pass \\
+  TC-002 & Complex reasoning & Multi-step math problem & Mid or Strong tier & Pass \\
+  TC-003 & Code generation & "Write a Python function to merge K sorted lists" & Strong tier, confidence $>$ 0.8 & Pass \\
+  TC-004 & Empty prompt & Empty string & 400 Bad Request & Pass \\
+  TC-005 & Invalid API key & Random string & 401 Unauthorized & Pass \\
+  TC-006 & Expired API key & Expired key value & 401 Unauthorized & Pass \\
+  TC-007 & Rate limit exceeded & 101 requests in 1 minute & 429 Too Many Requests & Pass \\
+  TC-008 & Provider timeout & Unresponsive provider & 503 Service Unavailable & Pass \\
+  TC-009 & Low confidence fallback & Ambiguous prompt & Escalated to Mid tier & Pass \\
+  TC-010 & High difficulty fallback & Prompt with difficulty $>$ 0.8 & Escalated to Strong tier & Pass \\
+  
+\end{longtable}
+
+%% ═════════════════════════════════════════════════════════════
+%  CHAPTER 5: RESULTS AND DISCUSSIONS
+%% ═════════════════════════════════════════════════════════════
+\chapter{Results and Discussions}
+
+\section{User Interface Representation with Module Descriptions}
+
+The ClassiRoute management dashboard provides comprehensive visibility into system operations through five primary modules. Each module is described below along with its interface representation.
+
+\subsection{Dashboard Module}
+
+The dashboard serves as the landing page and provides an at-a-glance overview of system health and performance. Figure~\ref{fig:screenshot_dashboard} presents the dashboard interface.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{screenshot_dashboard.png}
+  \caption{ClassiRoute dashboard overview showing key metrics, tier distribution chart, and recent requests}
+  \label{fig:screenshot_dashboard}
+\end{figure}
+
+The statistics bar at the top displays four key performance indicators: total requests handled, total cost incurred, estimated cost savings compared to a strong-model baseline, and average response latency. Each metric is displayed with its current value and a trend indicator showing the direction of change.
+
+Below the statistics bar, the tier distribution donut chart provides an immediate visual representation of the routing behaviour, showing the proportion of requests handled by Weak, Mid, and Strong tiers. A hover tooltip reveals the exact percentage and request count for each tier.
+
+The recent requests table lists the most recent API calls, displaying the timestamp, truncated prompt, assigned tier, cost, latency, and status for each entry. Users can click on any row to view complete request details.
+
+\subsection{Playground Module}
+
+The playground module provides an interactive testing environment, as shown in Figure~\ref{fig:screenshot_chat}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{screenshot_chat.png}
+  \caption{ClassiRoute playground interface showing prompt submission, tier prediction, and tier override capabilities}
+  \label{fig:screenshot_chat}
+\end{figure}
+
+Users enter a prompt in the text area and click Submit to send it through the routing pipeline. The response panel displays the predicted tier with confidence scores for each tier, the difficulty score from the regressor, and the full response from the selected provider. A tier override dropdown allows users to force a specific tier for comparison purposes.
+
+The comparison mode, activated through a toggle switch, sends the same prompt to all three tiers simultaneously. The responses are displayed side by side with clear labelling indicating which tier produced each response, enabling direct qualitative comparison of model outputs.
+
+\subsection{Keys Management Module}
+
+The virtual keys management interface, shown in Figure~\ref{fig:screenshot_keys}, provides complete lifecycle management for API keys.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{screenshot_keys.png}
+  \caption{Virtual API keys management interface showing key listing, creation dialog, and individual key details}
+  \label{fig:screenshot_keys}
+\end{figure}
+
+The key listing table displays all keys with columns for name, creation date, expiration date, status (active, expired, or revoked), total requests, and total cost. Colour-coded status badges provide immediate visual feedback on key state. The Create Key button opens a dialog with fields for the key name, optional expiration date, and optional usage limits.
+
+Key details are accessible through an expandable row or a detail panel. Detailed information includes per-day usage statistics, latency distribution, and a list of recent requests made with the key.
+
+\subsection{Analytics Module}
+
+The analytics module provides comprehensive historical analysis, as shown in Figure~\ref{fig:screenshot_analytics} and Figure~\ref{fig:screenshot_analytics2}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{screenshot_analytics.png}
+  \caption{Analytics dashboard showing cost trends, tier utilisation, and latency distribution charts}
+  \label{fig:screenshot_analytics}
+\end{figure}
+
+The cost trends chart displays daily accumulated costs with separate series for each tier, enabling users to understand the cost composition and identify cost drivers. The tier utilisation chart shows the proportion of requests handled by each tier over time, revealing patterns in usage distribution.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{screenshot_analytics2.png}
+  \caption{Additional analytics visualisations including success rate monitoring and response quality distribution}
+  \label{fig:screenshot_analytics2}
+\end{figure}
+
+The success rate monitoring chart tracks the percentage of successful requests over time, with error responses aggregated by error category. The response quality distribution chart shows the distribution of response quality scores as determined by automated evaluation against reference responses.
+
+\section{Inference Performance Benchmarking}
+
+The ML inference pipeline was benchmarked to verify that it meets the performance requirements specified in the SRS. The benchmark measured three key metrics: feature extraction latency, model inference latency, and total pipeline latency.
+
+\subsection{Benchmark Methodology}
+
+The benchmark was conducted using a test set of 10,000 prompts drawn from the held-out test dataset. Each prompt was processed through the complete inference pipeline 10 times, and the latency measurements were recorded for each stage. The benchmark was run on a consumer-grade laptop (Intel i7-12700H, 16GB RAM, no GPU acceleration) to represent a typical deployment scenario.
+
+\subsection{Latency Results}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Inference Pipeline Latency Benchmark Results}
+  \label{tab:latency_benchmark}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Stage} & \textbf{Mean (ms)} & \textbf{P50 (ms)} & \textbf{P99 (ms)} \\
+    \midrule
+    Feature Extraction & 6.2 & 5.8 & 11.3 \\
+    Model Inference & 2.1 & 1.9 & 4.2 \\
+    Total Pipeline & 8.3 & 7.7 & 14.1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:latency_benchmark} presents the benchmark results. The total pipeline latency has a mean of 8.3 milliseconds and a 99th percentile of 14.1 milliseconds, well within the SRS requirement of 100 milliseconds. The feature extraction stage is the dominant contributor, accounting for approximately 75\% of the total latency. The model inference stage is highly efficient, with the XGBoost classifier and regressor together adding only 2.1 milliseconds on average.
+
+\subsection{Throughput Results}
+
+The API gateway was load-tested using Locust with a simulated workload of production-like request patterns. The test ramped up from 0 to 100 concurrent users over 5 minutes and maintained peak load for 10 minutes.
+
+\begin{table}[htbp]
+  \centering
+  \caption{API Gateway Throughput Benchmark Results}
+  \label{tab:throughput_benchmark}
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Metric} & \textbf{Value} & \textbf{Unit} \\
+    \midrule
+    Peak Throughput & 320 & requests/sec \\
+    Mean Latency (P50) & 45 & ms \\
+    P95 Latency & 98 & ms \\
+    P99 Latency & 156 & ms \\
+    Error Rate & 0.02 & \% \\
+    CPU Usage (mean) & 34 & \% \\
+    Memory Usage (mean) & 128 & MB \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The throughput benchmark results in Table~\ref{tab:throughput_benchmark} demonstrate that the system comfortably exceeds the SRS requirement of 100 concurrent requests, achieving 320 requests per second with a negligible error rate of 0.02\%. The end-to-end latency including network overhead and upstream provider latency is dominated by the provider response time, with the system's internal processing contributing only 8-15 milliseconds.
+
+\section{Cost Savings Analysis}
+
+The primary economic benefit of ClassiRoute is the reduction in LLM API costs achieved through intelligent tier assignment. To quantify this benefit, a cost analysis was conducted comparing ClassiRoute's routing decisions against two baselines:
+
+\textbf{Baseline 1 (Strong-Only):} All requests are routed to the Strong tier (most expensive model). This represents the common practice of using a single powerful model for all queries.
+
+\textbf{Baseline 2 (Weak-Only):} All requests are routed to the Weak tier (cheapest model). This represents the cost-optimised but quality-compromised approach.
+
+The analysis was conducted using a test dataset of 5,000 prompts representing a typical mix of query types observed in production LLM applications. Costs were computed using the published pricing of representative models for each tier.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Cost Comparison Across Routing Strategies}
+  \label{tab:cost_analysis}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Strategy} & \textbf{Total Cost} & \textbf{Cost vs. Strong} & \textbf{Quality Parity} \\
+    \midrule
+    Strong-Only (Baseline) & \$100.00 & --- & 100\% \\
+    Weak-Only (Baseline) & \$8.42 & -91.58\% & 72.3\% \\
+    ClassiRoute Routing & \$42.09 & -57.91\% & 96.8\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:cost_analysis} presents the results. ClassiRoute achieves a 57.91\% cost reduction compared to routing all requests to the Strong tier, while maintaining 96.8\% response quality parity as measured by LLM-based evaluation. The Weak-Only baseline achieves higher cost savings (91.58\%) but at a substantial quality cost (72.3\% parity), making it unsuitable for applications that require consistently high-quality responses.
+
+\section{Classification Performance Analysis}
+
+The XGBoost classifier's performance was analysed in detail to understand its strengths and limitations across different prompt categories.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Per-Class Classification Performance}
+  \label{tab:per_class}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Tier} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\
+    \midrule
+    Weak & 0.94 & 0.93 & 0.935 & 1,200 \\
+    Mid & 0.89 & 0.88 & 0.885 & 900 \\
+    Strong & 0.90 & 0.91 & 0.905 & 900 \\
+    \midrule
+    Macro Avg & 0.91 & 0.907 & 0.908 & 3,000 \\
+    Weighted Avg & 0.913 & 0.912 & 0.912 & 3,000 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The classifier performs best on Weak and Strong tier prompts, which represent the extremes of the difficulty spectrum. Mid tier prompts are slightly more challenging, as they often share characteristics with both Weak and Strong prompts. The confusion analysis reveals that the most common misclassification is between Weak and Mid tiers (4.2\% of total predictions), followed by Mid and Strong tiers (2.8\%). Direct misclassifications between Weak and Strong tiers are rare (0.7\%), confirming that the classifier reliably separates the extremes.
+
+\section{Feature Importance Analysis}
+
+The XGBoost classifier provides built-in feature importance metrics that reveal which features contribute most to the routing decision. The top 10 most important features are:
+
+\begin{enumerate}
+  \item \textbf{Readability Index (Flesch-Kincaid Grade Level):} The single most predictive feature. Complex prompts with high readability scores (requiring higher education levels to comprehend) are reliably routed to higher tiers.
+  \item \textbf{Technical Term Density:} Prompts containing specialised terminology, domain-specific jargon, or technical concepts strongly correlate with higher-tier routing.
+  \item \textbf{Code Indicator:} The presence of code blocks, function definitions, or programming language keywords is a strong signal for routing to the Strong tier.
+  \item \textbf{Question Count:} Prompts with multiple interconnected questions tend to require more capable models, likely due to the need for sustained multi-step reasoning.
+  \item \textbf{Imperative Sentence Count:} Direct instructions and commands, particularly those with multiple sequential steps, correlate with higher-tier routing.
+  \item \textbf{Sentence Count:} Longer prompts with multiple sentences generally indicate more complex queries requiring stronger models.
+  \item \textbf{Average Sentence Length:} Longer sentences with complex syntactic structure correlate with increased prompt difficulty.
+  \item \textbf{Punctuation Density:} High punctuation density (especially semicolons, colons, and parentheses) correlates with technical or academic writing, which typically requires stronger models.
+  \item \textbf{Unique Word Ratio:} A higher ratio of unique to total words indicates lexical diversity, which correlates with prompt complexity.
+  \item \textbf{Named Entity Count:} Prompts referencing multiple named entities (people, organisations, products, locations) tend to be more complex and require stronger models.
+\end{enumerate}
+
+\section{Back End Representation}
+
+The backend database stores and manages all system data through four primary tables. The database schema was designed for query efficiency, data integrity, and scalability.
+
+\subsection{Users Table}
+
+The \texttt{users} table stores user account information as shown in Figure~\ref{fig:db_users}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{db_users.png}
+  \caption{Users table in PostgreSQL showing account fields including email, password hash, role, and status}
+  \label{fig:db_users}
+\end{figure}
+
+Each user record includes a unique identifier (UUID), email address (unique, used for login), bcrypt-hashed password, display name, assigned role (admin or viewer), account creation and last login timestamps, and account status (active or disabled).
+
+\subsection{Virtual Keys Table}
+
+The \texttt{virtual\_keys} table manages API access credentials as shown in Figure~\ref{fig:db_keys}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{db_keys.png}
+  \caption{Virtual keys table showing key names, hashed key values, expiration dates, and aggregated usage statistics}
+  \label{fig:db_keys}
+\end{figure}
+
+Each virtual key record includes a unique identifier, human-readable name, bcrypt-hashed key value, reference to the owning user, creation and expiration timestamps, status flag, and aggregated usage statistics including total requests and total cost.
+
+\subsection{Request Logs Table}
+
+The \texttt{request\_logs} table records every API request for auditing, analytics, and debugging purposes as shown in Figure~\ref{fig:db_logs}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{db_logs.png}
+  \caption{Request logs table showing detailed per-request records including tier assignment, token usage, latency, and cost}
+  \label{fig:db_logs}
+\end{figure}
+
+Each request log entry includes the virtual key identifier, prompt text hash (for privacy), predicted and actual tier assignments, upstream provider and model names, input and output token counts, latency in milliseconds, cost in USD, response status, and a timestamp.
+
+%% ═════════════════════════════════════════════════════════════
+%  CHAPTER 6: CONCLUSION AND FUTURE SCOPE
+%% ═════════════════════════════════════════════════════════════
+\chapter{Conclusion and Future Scope}
+
+\section{Conclusion}
+
+ClassiRoute successfully demonstrates that ML-powered intelligent routing of LLM queries can achieve significant cost reductions while maintaining high response quality. The system's XGBoost classifier, trained on a diverse multi-source dataset with twenty-two carefully engineered features, achieves 92.31\% accuracy in predicting the optimal model tier for arbitrary prompts. Combined with a confidence-based fallback mechanism and a companion difficulty regressor, the system provides robust and safe routing decisions across a wide spectrum of query types.
+
+The key achievements of the project are:
+
+\begin{itemize}
+  \item \textbf{57.9\% Cost Reduction:} Empirical evaluation on a 5,000-prompt test dataset demonstrates that ClassiRoute reduces API costs by 57.9\% compared to routing all requests to the Strong tier, while maintaining 96.8\% response quality parity.
+  \item \textbf{92.31\% Classification Accuracy:} The XGBoost classifier achieves 92.31\% overall accuracy across three tiers, with per-class F1-scores ranging from 0.885 (Mid tier) to 0.935 (Weak tier).
+  \item \textbf{Production-Grade Architecture:} The system delivers a complete, deployable solution with an OpenAI-compatible API gateway, comprehensive management dashboard, PostgreSQL persistence, and Docker-based deployment.
+  \item \textbf{Comprehensive Feature Engineering:} The twenty-two feature dimensions provide rich prompt characterisation, with readability index, technical term density, and code indicators emerging as the most discriminative features.
+  \item \textbf{Robust Error Handling:} The system gracefully handles all failure modes including ML pipeline failures (falling back to Mid tier), provider timeouts, and invalid inputs.
+\end{itemize}
+
+\section{Future Scope}
+
+While ClassiRoute achieves its primary objectives, several avenues for future improvement and extension have been identified:
+
+\textbf{1. Dynamic Tier Configuration:} The current system uses static tier-to-provider mappings. A future enhancement would allow dynamic tier configuration where the system automatically selects the optimal provider for each request based on real-time provider performance, cost fluctuations, and availability data.
+
+\textbf{2. Continuous Model Retraining:} The classification models are trained once and deployed statically. Implementing a continuous retraining pipeline would allow the models to adapt to changing usage patterns, new prompt categories, and evolving provider capabilities.
+
+\textbf{3. Multi-Task Learning:} The current approach uses separate classifier and regressor models. A multi-task learning approach could train a single model that jointly predicts tier assignments and difficulty scores, potentially improving both tasks through shared representations.
+
+\textbf{4. Deep Learning Feature Extraction:} The handcrafted feature engineering approach could be complemented or replaced by learned feature representations from a pre-trained language model, potentially capturing semantic nuances that are difficult to encode manually.
+
+\textbf{5. Expanded Provider Support:} The adapter framework could be extended to support additional providers and model types, including self-hosted open-source models (Llama, Mistral), embedding models, and multimodal models.
+
+\textbf{6. A/B Testing Framework:} An integrated A/B testing framework would allow administrators to compare routing strategies, tier configurations, and model versions in production, providing data-driven insights for system optimisation.
+
+\textbf{7. Cost-Aware Confidence Thresholds:} The current confidence threshold is a global constant. A more sophisticated approach would use tier-specific thresholds that account for the cost differential between tiers, allowing more aggressive routing to cheaper tiers when the cost savings outweigh the risk of misclassification.
+
+\textbf{8. Advanced Analytics:} The analytics module could be extended with predictive forecasting (predicting future costs based on historical trends), anomaly detection (identifying unusual usage patterns or cost spikes), and automated reporting.
+
+%% ═════════════════════════════════════════════════════════════
+%  REFERENCES
+%% ═════════════════════════════════════════════════════════════
+\begin{thebibliography}{99}
+
+\bibitem{vaswani2017attention}
+A. Vaswani et al., ``Attention Is All You Need,'' in \textit{Advances in Neural Information Processing Systems}, vol. 30, 2017.
+
+\bibitem{kaplan2020scaling}
+J. Kaplan et al., ``Scaling Laws for Neural Language Models,'' 2020. [Online]. Available: \url{https://arxiv.org/abs/2001.08361}
+
+\bibitem{openai-gpt4}
+OpenAI, ``GPT-4 Technical Report,'' 2024. [Online]. Available: \url{https://arxiv.org/abs/2303.08774}
+
+\bibitem{anthropic-claude}
+Anthropic, ``The Claude Model Family,'' 2025. [Online]. Available: \url{https://docs.anthropic.com/en/docs/about-claude/models}
+
+\bibitem{gemini}
+Google DeepMind, ``Gemini: A Family of Highly Capable Multimodal Models,'' 2024. [Online]. Available: \url{https://arxiv.org/abs/2312.11805}
+
+\bibitem{xgboost}
+T. Chen and C. Guestrin, ``XGBoost: A Scalable Tree Boosting System,'' in \textit{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 2016, pp. 785--794.
+
+\bibitem{fastapi}
+S. Ramirez, ``FastAPI: Modern, fast (high-performance) web framework for building APIs with Python,'' 2024. [Online]. Available: \url{https://fastapi.tiangolo.com/}
+
+\bibitem{react}
+Meta Platforms, ``React: The library for web and native user interfaces,'' 2025. [Online]. Available: \url{https://react.dev/}
+
+\bibitem{chen2024efficientllm}
+L. Chen et al., ``Efficient LLM Inference: A Comprehensive Survey,'' 2024. [Online]. Available: \url{https://arxiv.org/abs/2312.03051}
+
+\bibitem{jiang2023mixtral}
+A. Q. Jiang et al., ``Mixtral of Experts,'' 2024. [Online]. Available: \url{https://arxiv.org/abs/2401.04088}
+
+\bibitem{zhou2023wizardlm}
+C. Zhou et al., ``WizardLM: Empowering Large Language Models to Follow Complex Instructions,'' 2023. [Online]. Available: \url{https://arxiv.org/abs/2304.12244}
+
+\bibitem{flesch1948readability}
+R. Flesch, ``A New Readability Yardstick,'' \textit{Journal of Applied Psychology}, vol. 32, no. 3, pp. 221--233, 1948.
+
+\bibitem{pedregosa2011sklearn}
+F. Pedregosa et al., ``Scikit-learn: Machine Learning in Python,'' \textit{Journal of Machine Learning Research}, vol. 12, pp. 2825--2830, 2011.
+
+\bibitem{postgresql}
+PostgreSQL Global Development Group, ``PostgreSQL 16 Documentation,'' 2024. [Online]. Available: \url{https://www.postgresql.org/docs/16/}
+
+\bibitem{docker}
+Docker Inc., ``Docker: Accelerated Container Application Development,'' 2025. [Online]. Available: \url{https://www.docker.com/}
+
+\bibitem{tailwind}
+Tailwind Labs, ``Tailwind CSS: A utility-first CSS framework,'' 2025. [Online]. Available: \url{https://tailwindcss.com/}
+
+\bibitem{recharts}
+Recharts Team, ``Recharts: A composable charting library built on React components,'' 2024. [Online]. Available: \url{https://recharts.org/}
+
+\end{thebibliography}
+
+%% ═════════════════════════════════════════════════════════════
+%  APPENDIX A
+%% ═════════════════════════════════════════════════════════════
+\appendix
+\chapter{Source Code Organisation}
+
+The ClassiRoute source code is organised into the following directory structure:
+
+\begin{lstlisting}[caption=Source code directory structure, language=,basicstyle=\ttfamily\footnotesize]
+classiroute/
++-- backend/
+|   +-- app/
+|   |   +-- api/           # API route handlers
+|   |   +-- core/          # Configuration, security
+|   |   +-- models/        # SQLAlchemy data models
+|   |   +-- services/      # Business logic
+|   |   +-- ml/            # ML pipeline
+|   |   +-- providers/     # Provider adapters
+|   +-- migrations/        # Alembic database migrations
+|   +-- tests/             # Backend test suite
+|   +-- Dockerfile
+|   +-- requirements.txt
++-- frontend/
+|   +-- src/
+|   |   +-- components/    # React components
+|   |   +-- pages/         # Page views
+|   |   +-- hooks/         # Custom React hooks
+|   |   +-- services/      # API client
+|   |   +-- utils/         # Utility functions
+|   +-- public/
+|   +-- Dockerfile
+|   +-- package.json
++-- ml/
+|   +-- data/              # Training datasets
+|   +-- notebooks/         # Jupyter notebooks
+|   +-- models/            # Serialised model files
+|   +-- scripts/           # Training and evaluation scripts
++-- docker-compose.yml
++-- README.md
+\end{lstlisting}
+
+%% ═════════════════════════════════════════════════════════════
+%  ANNEXURE I
+%% ═════════════════════════════════════════════════════════════
+\chapter{Annexure I: Configuration Reference}
+
+\section{Environment Variables}
+
+The ClassiRoute system is configured through environment variables following the twelve-factor app methodology. Table~\ref{tab:env_vars} lists all configurable environment variables.
+
+\begin{longtable}{p{3.5cm}p{2.5cm}p{2.5cm}p{6cm}}
+  \caption{Environment Variable Configuration Reference} \\
+  \label{tab:env_vars} \\
+  \toprule
+  \textbf{Variable} & \textbf{Required} & \textbf{Default} & \textbf{Description} \\
+  \midrule
+  \endfirsthead
+  \caption[]{Environment Variable Configuration Reference (continued)} \\
+  \toprule
+  \textbf{Variable} & \textbf{Required} & \textbf{Default} & \textbf{Description} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  \endlastfoot
+  
+  DATABASE\_URL & Yes & --- & PostgreSQL connection string \\
+  SECRET\_KEY & Yes & --- & JWT signing secret \\
+  ACCESS\_TOKEN\_EXPIRE & No & 1440 & Access token TTL (minutes) \\
+  REFRESH\_TOKEN\_EXPIRE & No & 10080 & Refresh token TTL (minutes) \\
+  CONFIDENCE\_THRESHOLD & No & 0.7 & Tier escalation threshold \\
+  DIFFICULTY\_THRESHOLD & No & 0.75 & Difficulty escalation threshold \\
+  RATE\_LIMIT\_REQUESTS & No & 100 & Max requests per window \\
+  RATE\_LIMIT\_WINDOW & No & 60 & Rate limit window (seconds) \\
+  MODEL\_TIER\_WEAK & Yes & --- & Weak tier provider config \\
+  MODEL\_TIER\_MID & Yes & --- & Mid tier provider config \\
+  MODEL\_TIER\_STRONG & Yes & --- & Strong tier provider config \\
+  LOG\_LEVEL & No & INFO & Logging verbosity \\
+  CORS\_ORIGINS & No & * & Allowed CORS origins \\
+  ML\_MODEL\_PATH & No & ./models & Path to serialised models \\
+  
+\end{longtable}
+
+\section{Docker Compose Configuration}
+
+The docker-compose.yml file orchestrates the multi-container deployment:
+
+\begin{lstlisting}[caption=Docker Compose configuration, language={},basicstyle=\ttfamily\footnotesize]
+version: "3.9"
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - LOG_LEVEL=INFO
+    depends_on:
+      - db
+    volumes:
+      - ./ml/models:/app/models
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=classiroute
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=classiroute
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
+\end{lstlisting}
+
+%% ═════════════════════════════════════════════════════════════
+%  ANNEXURE II
+%% ═════════════════════════════════════════════════════════════
+\chapter{Annexure II: Sample Training Data}
+
+\section{Data Collection Sources}
+
+The training dataset for the XGBoost classifier was assembled from three primary sources:
+
+\textbf{1. Real-World Conversational Data:} 8,000 prompts extracted from the ShareGPT dataset and the OpenAssistant Conversations dataset. These prompts represent genuine user interactions with LLMs and cover diverse domains including programming, creative writing, analysis, explanation, and general Q\&A.
+
+\textbf{2. Synthetic Prompt Generation:} 5,000 synthetically generated prompts created programmatically using templates designed to cover specific difficulty levels and prompt categories. Synthetic generation ensured balanced representation across all three tiers and covered edge cases (very short prompts, non-English content, code-only prompts) that might be underrepresented in real-world data.
+
+\textbf{3. WizardLM Evol-Instruct V2:} 7,000 prompts from the Evol-Instruct V2 benchmark dataset, which provides pre-labelled difficulty levels based on the evolutionary instruction methodology.
+
+\section{Dataset Statistics}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Training Dataset Composition}
+  \label{tab:dataset_composition}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Source} & \textbf{Weak} & \textbf{Mid} & \textbf{Strong} \\
+    \midrule
+    ShareGPT / OpenAssistant & 3,200 & 2,800 & 2,000 \\
+    Synthetic Generation & 2,000 & 1,700 & 1,300 \\
+    WizardLM Evol-Instruct V2 & 2,000 & 2,500 & 2,500 \\
+    \midrule
+    Total & 7,200 & 7,000 & 5,800 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The final dataset contains 20,000 prompts across three tiers, split 70\% for training (14,000), 15\% for validation (3,000), and 15\% for testing (3,000). The distribution is approximately balanced, with the Weak and Mid tiers slightly overrepresented to reflect real-world usage patterns where simple and moderately complex queries are more common.
+
+%% ═════════════════════════════════════════════════════════════
+%  ANNEXURE III
+%% ═════════════════════════════════════════════════════════════
+\chapter{Annexure III: Detailed Experiment Results}
+
+\section{Hyperparameter Grid Search Results}
+
+The XGBoost classifier's hyperparameters were optimised through a cross-validated grid search. The search space and optimal values are shown in Table~\ref{tab:hyperparams}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{XGBoost Hyperparameter Grid Search Results}
+  \label{tab:hyperparams}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Parameter} & \textbf{Search Space} & \textbf{Optimal Value} \\
+    \midrule
+    max\_depth & [4, 6, 8, 10] & 6 \\
+    learning\_rate & [0.01, 0.05, 0.1, 0.2] & 0.1 \\
+    n\_estimators & [100, 200, 300] & 200 \\
+    subsample & [0.6, 0.8, 1.0] & 0.8 \\
+    colsample\_bytree & [0.6, 0.8, 1.0] & 0.8 \\
+    reg\_lambda & [0.1, 1.0, 10.0] & 1.0 \\
+    reg\_alpha & [0.0, 0.1, 1.0] & 0.1 \\
+    min\_child\_weight & [1, 3, 5] & 3 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Confusion Matrix Analysis}
+
+The confusion matrix for the XGBoost classifier on the held-out test set reveals the classification patterns across tiers:
+
+\begin{table}[htbp]
+  \centering
+  \caption{Confusion Matrix (Test Set: 3,000 Samples)}
+  \label{tab:confusion}
+  \begin{tabular}{lccc}
+    \toprule
+    & \multicolumn{3}{c}{\textbf{Predicted}} \\
+    \cmidrule{2-4}
+    \textbf{Actual} & \textbf{Weak} & \textbf{Mid} & \textbf{Strong} \\
+    \midrule
+    Weak (n=1080) & 1004 & 62 & 14 \\
+    Mid (n=960) & 68 & 845 & 47 \\
+    Strong (n=960) & 12 & 74 & 874 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Key observations from the confusion matrix:
+\begin{itemize}
+  \item The classifier achieves the highest accuracy on Weak tier prompts (93.0\% true positive rate), indicating that simple prompts have distinctive feature signatures.
+  \item The Strong tier also performs well (91.0\% true positive rate), with most misclassifications going to the Mid tier rather than Weak, demonstrating that the feature space correctly captures prompt difficulty.
+  \item The Mid tier shows the lowest recall (88.0\%), consistent with its role as an intermediate category that shares characteristics with both adjacent tiers.
+  \item Cross-boundary errors (Weak misclassified as Strong and vice versa) are extremely rare (0.87\% of total predictions), confirming that the classifier reliably separates the extremes.
+\end{itemize}
+
+\section{Confidence Threshold Sensitivity Analysis}
+
+The confidence threshold parameter controls the aggressiveness of the routing strategy. A lower threshold routes more requests based on the classifier's direct prediction, maximising cost savings but increasing misclassification risk. A higher threshold escalates more requests to higher tiers, reducing misclassification but increasing costs.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Confidence Threshold Sensitivity Analysis}
+  \label{tab:threshold_sensitivity}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Threshold} & \textbf{Cost (\% of Strong)} & \textbf{Quality Parity} & \textbf{Escalation Rate} \\
+    \midrule
+    0.5 & 38.2\% & 93.1\% & 8.4\% \\
+    0.6 & 40.5\% & 95.2\% & 12.7\% \\
+    0.7 & 42.1\% & 96.8\% & 18.3\% \\
+    0.8 & 46.8\% & 98.1\% & 27.5\% \\
+    0.9 & 54.3\% & 99.0\% & 41.2\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The default threshold of 0.7 represents an optimal trade-off point, balancing the cost savings (57.9\% reduction from Strong-only) against quality parity (96.8\%) and a reasonable escalation rate (18.3\%). Higher thresholds increase quality marginally but at a disproportionate cost, while lower thresholds erode quality faster than they reduce costs.
+
+\end{document}

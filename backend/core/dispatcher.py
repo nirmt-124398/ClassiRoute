@@ -32,7 +32,7 @@ async def dispatch_sync(messages, virtual_key, tier: int):
     base_url = getattr(virtual_key, f"{t}_base_url")
 
     provider = get_provider(provider_type)
-    return provider.chat(
+    return await provider.chat(
         messages=messages,
         model=model,
         api_key=api_key,

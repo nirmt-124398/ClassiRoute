@@ -152,9 +152,25 @@ async def chat_completions(
 
     dispatch_ms = int((time.time() - dispatch_start) * 1000)
     latency_ms = int((time.time() - start) * 1000)
-    result = dict(response)
-    result["x-llmrouter"] = routing
     bg_usage = response.get("usage", {})
+    result = {
+        "id": f"chatcmpl-{int(time.time())}",
+        "object": "chat.completion",
+        "created": int(time.time()),
+        "model": response.get("model", model_used or "unknown"),
+        "choices": [
+            {
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": response.get("content", ""),
+                },
+                "finish_reason": "stop",
+            }
+        ],
+        "usage": bg_usage,
+        "x-llmrouter": routing,
+    }
     background_tasks.add_task(
         _log, virtual_key, prompt, routing, model_used,
         {
