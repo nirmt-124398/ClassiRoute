@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/your-org/classiroute?style=flat-square&color=788c5d" alt="License">
+  <img src="https://img.shields.io/github/license/nirmt-124398/ClassiRoute?style=flat-square&color=788c5d" alt="License">
   <img src="https://img.shields.io/badge/Python-3.13-6a9bcc?style=flat-square&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/React-19-d97757?style=flat-square&logo=react&logoColor=white" alt="React">
   <img src="https://img.shields.io/badge/XGBoost-92.3%25_accuracy-788c5d?style=flat-square" alt="XGBoost">
